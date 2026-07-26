@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SettleIQ — AI-Powered Global Immigration Advisor</title>
+  <meta name="description" content="Find the perfect country to settle in permanently. AI analysis of 50+ countries across safety, PR timelines, cost of living, and social acceptance.">
+  
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       KREA.AI STYLE — MINIMAL, CONTENT-FIRST, BLACK & WHITE
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #ffffff;
+      color: #111111;
+      font-size: 16px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SECTION CONTAINERS */
+    .section-dark {
+      background-color: #000000;
+      color: #ffffff;
+      padding: 80px 24px;
+    }
+    .section-light {
+      background-color: #ffffff;
+      color: #111111;
+      padding: 80px 24px;
+    }
+    .section-gray {
+      background-color: #f5f5f5;
+      color: #111111;
+      padding: 80px 24px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* NAVBAR */
+    nav {
+      background-color: #000000;
+      border-bottom: 1px solid #222222;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn-nav-ghost {
+      color: #888888;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .btn-nav-ghost:hover {
+      color: #ffffff;
+    }
+    .btn-nav-solid {
+      background: #ffffff;
+      color: #000000;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .btn-nav-solid:hover {
+      background: #e5e5e5;
+    }
+
+    /* HERO SECTION */
+    .hero-content {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 0 20px;
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888888;
+      margin-bottom: 24px;
+    }
+    .hero-title {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+    .hero-subtext {
+      font-size: 18px;
+      color: #a1a1aa;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    .hero-stats {
+      font-size: 14px;
+      font-weight: 500;
+      color: #71717a;
+      margin-bottom: 40px;
+    }
+    .btn-hero-cta {
+      display: inline-block;
+      background: #ffffff;
+      color: #000000;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .btn-hero-cta:hover {
+      background: #e5e5e5;
+    }
+
+    /* SECTION HEADINGS */
+    .section-title {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .section-subtitle {
+      font-size: 16px;
+      color: #666666;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    /* HOW IT WORKS (3 STEPS ROW) */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .step-card {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 32px;
+    }
+    .step-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666666;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    .step-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .step-desc {
+      font-size: 15px;
+      color: #666666;
+      line-height: 1.6;
+    }
+
+    /* FORM STYLES */
+    .form-card {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .form-title-head {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .form-group.span-2 { grid-column: span 2; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #666666;
+      margin-bottom: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111111;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus {
+      border-color: #000000;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+    }
+
+    /* SEARCHABLE FLAG NATIONALITY DROPDOWN */
+    .custom-select-wrapper { position: relative; width: 100%; }
+    .custom-select-trigger {
+      display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+    }
+    .custom-select-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #ffffff; border: 1px solid #e5e5e5;
+      border-radius: 8px; max-height: 260px; overflow-y: auto; z-index: 1000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; padding: 6px;
+    }
+    .custom-select-dropdown.open { display: block; }
+    .custom-select-search {
+      width: 100%; padding: 8px 12px; background: #f9f9f9;
+      border: 1px solid #e5e5e5; border-radius: 6px;
+      color: #111111; font-size: 14px; margin-bottom: 6px; outline: none;
+    }
+    .custom-option {
+      padding: 8px 12px; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px; font-size: 14px;
+    }
+    .custom-option:hover, .custom-option.selected {
+      background: #f5f5f5; color: #000000; font-weight: 600;
+    }
+
+    /* SUBMIT BUTTON */
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      margin-top: 32px;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn-submit:hover:not(:disabled) {
+      background: #333333;
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* LOADING STATE */
+    .loading-state {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      padding: 16px;
+      background: #f9f9f9;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    /* RESULTS SECTION — EXACT ID="RESULT" & HIDDEN INITIALLY */
+    #result { display: none; }
+    
+    .summary-card {
+      background: #f5f5f5;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      font-size: 16px;
+      color: #111111;
+      line-height: 1.7;
+    }
+
+    .country-card {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .country-card.visible { opacity: 1; }
+
+    .country-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e5e5e5;
+      margin-bottom: 24px;
+    }
+    .country-flag { font-size: 48px; }
+    .country-name { font-size: 28px; font-weight: 700; }
+    .match-score { 
+      margin-left: auto; 
+      font-size: 36px; 
+      font-weight: 800;
+      color: #000000;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+    .data-label { color: #666666; font-weight: 500; }
+    .data-value { color: #111111; font-weight: 600; text-align: right; }
+
+    /* COLLAPSIBLE TOPICS */
+    .topics-container { margin-top: 24px; }
+    .topic-item {
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .topic-toggle {
+      width: 100%;
+      padding: 14px 18px;
+      background: #ffffff;
+      border: none;
+      color: #111111;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+    }
+    .topic-toggle:hover { background: #f9f9f9; }
+    .topic-content {
+      padding: 16px 18px;
+      display: none;
+      border-top: 1px solid #e5e5e5;
+      background: #fafafa;
+      font-size: 14px;
+      color: #333333;
+      line-height: 1.6;
+    }
+    .topic-content.open { display: block; }
+
+    /* PROS & CONS BULLETS */
+    .bullet-section { margin-top: 24px; }
+    .bullet-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .bullet-list { list-style: none; }
+    .bullet-list li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .pros-list li { color: #111111; }
+    .pros-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #16a34a;
+      font-weight: 700;
+    }
+    .cons-list li { color: #666666; }
+    .cons-list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: #666666;
+      font-weight: 700;
+    }
+
+    /* COMPARISON TABLE */
+    .table-container {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+    }
+    .clean-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      text-align: left;
+    }
+    .clean-table th, .clean-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .clean-table th {
+      font-weight: 700;
+      color: #111111;
+      background: #f5f5f5;
+    }
+    .clean-table tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    /* FINAL VERDICT BOX */
+    .verdict-card {
+      background: #ffffff;
+      border: 2px solid #000000;
+      border-radius: 12px;
+      padding: 32px;
+      margin-top: 32px;
+    }
+    .verdict-head {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .verdict-body {
+      font-size: 15px;
+      color: #333333;
+      line-height: 1.7;
+    }
+
+    /* ACTION BUTTONS */
+    .actions-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .btn-action-dark {
+      flex: 1;
+      padding: 14px;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s ease;
+    }
+    .btn-action-dark:hover { background: #333333; }
+    .btn-action-outline {
+      flex: 1;
+      padding: 14px;
+      background: #ffffff;
+      color: #111111;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s ease;
+    }
+    .btn-action-outline:hover { border-color: #000000; }
+
+    /* WHY SETTLEIQ (3 FEATURE CARDS) */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .feature-card {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 32px;
+    }
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: #666666;
+      line-height: 1.6;
+    }
+
+    /* CTA SECTION */
+    .cta-content {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* FOOTER */
+    footer {
+      background: #000000;
+      border-top: 1px solid #222222;
+      padding: 40px 24px;
+      color: #666666;
+      font-size: 14px;
+    }
+    .footer-flex {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* TOAST */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #000000;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.2s ease;
+      z-index: 10000;
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .hero-title { font-size: 36px; }
+      .section-title { font-size: 28px; }
+      .steps-grid, .form-grid, .features-grid, .actions-row { grid-template-columns: 1fr; }
+      .form-group.span-2 { grid-column: span 1; }
+      .footer-flex { flex-direction: column; gap: 16px; text-align: center; }
+      .country-header { flex-wrap: wrap; }
+      .match-score { margin-left: 0; width: 100%; text-align: left; margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <a href="#" class="nav-logo">SettleIQ</a>
+    <div class="nav-actions">
+      <a href="#assessment-section" class="btn-nav-ghost">Sign in</a>
+      <a href="#assessment-section" class="btn-nav-solid">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- SECTION 1: HERO (BLACK BACKGROUND) -->
+  <section class="section-dark">
+    <div class="container">
+      <div class="hero-content">
+        <span class="hero-tag">AI-Powered Immigration Research</span>
+        <h1 class="hero-title">Find the Perfect Country to Call Home</h1>
+        <p class="hero-subtext">Comprehensive AI assessment analyzing PR timelines, job market demand, taxes, net savings, and quality of life for any passport.</p>
+        <div class="hero-stats">50+ Countries · 24 Key Metrics · 30s Report</div>
+        <a href="#assessment-section" class="btn-hero-cta">Start Your Assessment →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: HOW IT WORKS (WHITE BACKGROUND) -->
+  <section class="section-light">
+    <div class="container">
+      <h2 class="section-title">How SettleIQ Works</h2>
+      <p class="section-subtitle">Three simple steps to your personalized global settlement roadmap</p>
+      
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">Step 01</div>
+          <div class="step-title">Enter Your Profile</div>
+          <div class="step-desc">Input your passport nationality, profession, education, savings, and settlement preferences.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 02</div>
+          <div class="step-title">AI Analyzes 24 Factors</div>
+          <div class="step-desc">Google Gemini 3.5 Flash evaluates visa availability, PR timelines, net income, and GPI safety rankings.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 03</div>
+          <div class="step-title">Get Your Report</div>
+          <div class="step-desc">Receive top country picks with salary breakdowns, itemized cost of living, and an executive verdict.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: ASSESSMENT FORM (LIGHT GRAY BACKGROUND) -->
+  <section class="section-gray" id="assessment-section">
+    <div class="container">
+      <div class="form-card">
+        <div class="form-title-head">Your Settlement Profile</div>
+
+        <form id="settleForm" onsubmit="handleFormSubmit(event)">
+          <div class="form-grid">
+
+            <!-- 1. Searchable Flag Dropdown -->
+            <div class="form-group">
+              <label>Passport Nationality *</label>
+              <div class="custom-select-wrapper">
+                <div class="input-control custom-select-trigger" id="nationalityTrigger" onclick="toggleNationalityDropdown()">
+                  <span id="selectedNationalityText">🇮🇳 India</span>
+                  <span style="font-size: 12px; color: #666666;">▼</span>
+                </div>
+                <div class="custom-select-dropdown" id="nationalityDropdown">
+                  <input type="text" class="custom-select-search" id="nationalitySearch" placeholder="Search country..." oninput="filterCountries()" onclick="event.stopPropagation()" />
+                  <div id="countryListOptions"></div>
+                </div>
+              </div>
+              <input type="hidden" id="nationalityValue" value="India" />
+            </div>
+
+            <!-- 2. Age Range -->
+            <div class="form-group">
+              <label for="age">Age Range *</label>
+              <select id="age" required>
+                <option value="18-25">18–25 years</option>
+                <option value="26-35" selected>26–35 years</option>
+                <option value="36-45">36–45 years</option>
+                <option value="46+">46+ years</option>
+              </select>
+            </div>
+
+            <!-- 3. Profession -->
+            <div class="form-group">
+              <label for="profession">Profession / Occupation *</label>
+              <input type="text" id="profession" placeholder="e.g. Software Engineer, Doctor" required />
+            </div>
+
+            <!-- 4. Education -->
+            <div class="form-group">
+              <label for="education">Education Level *</label>
+              <select id="education" required>
+                <option value="High School">High School</option>
+                <option value="Diploma / Vocational">Diploma / Vocational</option>
+                <option value="Bachelor's Degree" selected>Bachelor's Degree</option>
+                <option value="Master's Degree">Master's Degree</option>
+                <option value="PhD / Doctorate">PhD / Doctorate</option>
+                <option value="Professional Degree (Medicine/Law)">Professional Degree (Medicine/Law)</option>
+              </select>
+            </div>
+
+            <!-- 5. Experience -->
+            <div class="form-group">
+              <label for="experience">Work Experience *</label>
+              <select id="experience" required>
+                <option value="Less than 1 year">Less than 1 year</option>
+                <option value="1-3 years">1–3 years</option>
+                <option value="3-5 years" selected>3–5 years</option>
+                <option value="5-10 years">5–10 years</option>
+                <option value="10+ years">10+ years</option>
+              </select>
+            </div>
+
+            <!-- 6. Monthly Budget -->
+            <div class="form-group">
+              <label for="budget">Monthly Budget (USD) *</label>
+              <input type="number" id="budget" placeholder="e.g. 3500" min="200" required />
+            </div>
+
+            <!-- 7. Current Savings -->
+            <div class="form-group">
+              <label for="savings">Current Savings (USD) *</label>
+              <select id="savings" required>
+                <option value="Less than $5,000">Less than $5,000</option>
+                <option value="$5,000 - $20,000">$5,000 – $20,000</option>
+                <option value="$20,000 - $50,000" selected>$20,000 – $50,000</option>
+                <option value="$50,000 - $100,000">$50,000 – $100,000</option>
+                <option value="$100,000+">$100,000+</option>
+              </select>
+            </div>
+
+            <!-- 8. Work Style -->
+            <div class="form-group">
+              <label for="workStyle">Work Style *</label>
+              <select id="workStyle" required>
+                <option value="Office job (need work visa/sponsorship)" selected>Office job (need work visa/sponsorship)</option>
+                <option value="Remote worker (work for foreign company)">Remote worker (work for foreign company)</option>
+                <option value="Entrepreneur/Business owner">Entrepreneur / Business owner</option>
+                <option value="Student (planning to study abroad)">Student (planning to study abroad)</option>
+                <option value="Retired/Financially independent">Retired / Financially independent</option>
+              </select>
+            </div>
+
+            <!-- 9. Language Skills -->
+            <div class="form-group">
+              <label for="languages">Language Skills *</label>
+              <select id="languages" required>
+                <option value="English only" selected>English only</option>
+                <option value="English + 1 European language">English + 1 European language</option>
+                <option value="English + 1 Asian language">English + 1 Asian language</option>
+                <option value="Multilingual (3+ languages)">Multilingual (3+ languages)</option>
+              </select>
+            </div>
+
+            <!-- 10. Climate Preference -->
+            <div class="form-group">
+              <label for="climate">Climate Preference *</label>
+              <select id="climate" required>
+                <option value="Warm and sunny (Mediterranean/Tropical)" selected>Warm & sunny (Mediterranean/Tropical)</option>
+                <option value="Mild/Temperate (Spring-like year round)">Mild / Temperate (Spring-like year round)</option>
+                <option value="Cold (I prefer 4 seasons)">Cold (4 distinct seasons)</option>
+                <option value="No preference">No preference</option>
+              </select>
+            </div>
+
+            <!-- 11. Healthcare Priority -->
+            <div class="form-group">
+              <label for="healthcare">Healthcare Priority *</label>
+              <select id="healthcare" required>
+                <option value="Universal free healthcare is must" selected>Universal free healthcare is a must</option>
+                <option value="Private healthcare is fine">Private healthcare is fine</option>
+                <option value="No strong preference">No strong preference</option>
+              </select>
+            </div>
+
+            <!-- 12. Reason for Moving -->
+            <div class="form-group">
+              <label for="reason">Reason for Moving *</label>
+              <select id="reason" required>
+                <option value="Better career & high income" selected>Better career & high income</option>
+                <option value="Safety & political stability">Safety & political stability</option>
+                <option value="Quality of life & healthcare">Quality of life & healthcare</option>
+                <option value="Family reunification">Family reunification</option>
+                <option value="Retirement & relaxation">Retirement & relaxation</option>
+                <option value="Education & university access">Education & university access</option>
+              </select>
+            </div>
+
+            <!-- 13. Top Priority -->
+            <div class="form-group">
+              <label for="priorities">Top Settlement Priority *</label>
+              <select id="priorities" required>
+                <option value="safety and peace">Safety and Peace</option>
+                <option value="fast PR and citizenship" selected>Fast PR & Citizenship Pathways</option>
+                <option value="high salary and low taxes">High Salary & Low Tax Environment</option>
+                <option value="low social discrimination">Low Discrimination & Welcoming Community</option>
+                <option value="warm climate and expat community">Warm Climate & Expat Scene</option>
+                <option value="good education for children">Top Tier Education for Children</option>
+              </select>
+            </div>
+
+            <!-- 14. Family Situation -->
+            <div class="form-group">
+              <label for="family">Family Situation *</label>
+              <select id="family" required>
+                <option value="single" selected>Single</option>
+                <option value="married no kids">Married, no kids</option>
+                <option value="married with kids">Married with kids</option>
+                <option value="planning to bring parents">Planning to bring parents</option>
+              </select>
+            </div>
+
+            <!-- 15. Government Preference -->
+            <div class="form-group span-2">
+              <label for="govtype">Government Preference *</label>
+              <select id="govtype" required>
+                <option value="democratic and welcoming to immigrants" selected>Democratic & Welcoming to Immigrants</option>
+                <option value="strict but stable and safe">Strict but Stable & Highly Safe</option>
+                <option value="maximum personal freedom and free speech">Maximum Personal Freedom & Free Speech</option>
+                <option value="strong welfare state with good public services">Strong Social Safety Net & Public Healthcare</option>
+                <option value="business friendly low tax minimal regulation">Business Friendly — Low Tax & Minimal Bureaucracy</option>
+                <option value="no preference">No Specific Preference</option>
+              </select>
+            </div>
+
+          </div>
+
+          <button type="submit" class="btn-submit" id="submitBtn">
+            Generate My Settlement Report →
+          </button>
+
+          <div class="loading-state" id="loadingState">
+            Evaluating 24 factors across 50+ countries with Google Gemini AI...
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: RESULTS (EXACT ID="RESULT" & HIDDEN UNTIL GENERATED) -->
+  <section class="section-light" id="result" style="display:none;">
+    <div class="container">
+      <h2 class="section-title">Your Settlement Analysis</h2>
+      <p class="section-subtitle" id="resultsSubhead">Immigration Research Powered by Google Gemini AI</p>
+
+      <div class="summary-card" id="summaryBox">Analyzing profile...</div>
+
+      <div id="countryCardsContainer"></div>
+
+      <!-- SECTION 5: COMPARISON TABLE -->
+      <div style="margin-top: 60px;">
+        <h3 style="font-size: 24px; font-weight: 700; margin-bottom: 20px;">Side-by-Side Factor Comparison</h3>
+        <div class="table-container">
+          <table class="clean-table" id="compareMatrixTable"></table>
+        </div>
+      </div>
+
+      <!-- FINAL VERDICT CARD -->
+      <div class="verdict-card" id="verdictBox" style="display:none;">
+        <div class="verdict-head">Executive AI Recommendation</div>
+        <div class="verdict-body" id="verdictText"></div>
+      </div>
+
+      <!-- ACTIONS ROW (SHOWN ONLY AFTER RESULTS ARE GENERATED) -->
+      <div class="actions-row">
+        <button class="btn-action-dark" id="downloadBtn" onclick="downloadPDF()">Download PDF Report</button>
+        <button class="btn-action-outline" onclick="shareReport()">Share Report Summary</button>
+        <button class="btn-action-outline" onclick="resetForm()">Start Over</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: WHY SETTLEIQ (WHITE BACKGROUND) -->
+  <section class="section-light" style="border-top: 1px solid #e5e5e5;">
+    <div class="container">
+      <h2 class="section-title">Why SettleIQ</h2>
+      <p class="section-subtitle">Built for accurate, data-driven global relocation research</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">24 Deep Topics</div>
+          <div class="feature-desc">Covers job market demand, net salary, itemized rent, PR timelines, GPI peace ranking, and climate.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛂</div>
+          <div class="feature-title">Any Passport</div>
+          <div class="feature-desc">Tailored visa availability and realistic residency timelines specific to your passport country.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Instant Report</div>
+          <div class="feature-desc">Generates a complete executive settlement assessment in 30 seconds using Gemini 3.5 Flash.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 7: CTA (BLACK BACKGROUND) -->
+  <section class="section-dark">
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="hero-title" style="font-size: 40px; margin-bottom: 16px;">Ready to Find Your Country?</h2>
+        <p class="hero-subtext" style="font-size: 16px; margin-bottom: 32px;">Start your free AI-powered settlement assessment in seconds.</p>
+        <a href="#assessment-section" class="btn-hero-cta">Start Free Assessment →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8: FOOTER (BLACK BACKGROUND) -->
+  <footer>
+    <div class="footer-flex">
+      <div style="font-weight: 800; color: #ffffff; font-size: 18px;">SettleIQ</div>
+      <div>Powered by Google Gemini AI · Not legal advice</div>
+      <div>© 2026 SettleIQ</div>
+    </div>
+  </footer>
+
+  <div class="toast-msg" id="toast"></div>
+
+  <script>
+    const FLAG_COUNTRIES = [
+      { name: "India", flag: "🇮🇳" },
+      { name: "United States", flag: "🇺🇸" },
+      { name: "United Kingdom", flag: "🇬🇧" },
+      { name: "Pakistan", flag: "🇵🇰" },
+      { name: "Bangladesh", flag: "🇧🇩" },
+      { name: "Nigeria", flag: "🇳🇬" },
+      { name: "Philippines", flag: "🇵🇭" },
+      { name: "Brazil", flag: "🇧🇷" },
+      { name: "Mexico", flag: "🇲🇽" },
+      { name: "Egypt", flag: "🇪🇬" },
+      { name: "Vietnam", flag: "🇻🇳" },
+      { name: "Indonesia", flag: "🇮🇩" },
+      { name: "Turkey", flag: "🇹🇷" },
+      { name: "Saudi Arabia", flag: "🇸🇦" },
+      { name: "South Africa", flag: "🇿🇦" },
+      { name: "China", flag: "🇨🇳" },
+      { name: "South Korea", flag: "🇰🇷" },
+      { name: "Russia", flag: "🇷🇺" },
+      { name: "Ukraine", flag: "🇺🇦" },
+      { name: "Poland", flag: "🇵🇱" },
+      { name: "Romania", flag: "🇷🇴" },
+      { name: "Colombia", flag: "🇨🇴" },
+      { name: "Argentina", flag: "🇦🇷" },
+      { name: "Iraq", flag: "🇮🇶" },
+      { name: "Iran", flag: "🇮🇷" },
+      { name: "Ghana", flag: "🇬🇭" },
+      { name: "Kenya", flag: "🇰🇪" },
+      { name: "Tanzania", flag: "🇹🇿" },
+      { name: "Morocco", flag: "🇲🇦" },
+      { name: "Albania", flag: "🇦🇱" },
+      { name: "Serbia", flag: "🇷🇸" },
+      { name: "Nepal", flag: "🇳🇵" },
+      { name: "Sri Lanka", flag: "🇱🇰" },
+      { name: "Malaysia", flag: "🇲🇾" },
+      { name: "Thailand", flag: "🇹🇭" },
+      { name: "Uzbekistan", flag: "🇺🇿" },
+      { name: "Kazakhstan", flag: "🇰🇿" },
+      { name: "Azerbaijan", flag: "🇦🇿" },
+      { name: "Georgia", flag: "🇬🇪" },
+      { name: "Armenia", flag: "🇦🇲" },
+      { name: "Canada", flag: "🇨🇦" },
+      { name: "Australia", flag: "🇦🇺" },
+      { name: "Germany", flag: "🇩🇪" },
+      { name: "France", flag: "🇫🇷" },
+      { name: "Spain", flag: "🇪🇸" },
+      { name: "Netherlands", flag: "🇳🇱" },
+      { name: "New Zealand", flag: "🇳🇿" },
+      { name: "Ireland", flag: "🇮🇪" },
+      { name: "Singapore", flag: "🇸🇬" },
+      { name: "United Arab Emirates", flag: "🇦🇪" }
+    ];
+
+    let currentAIResult = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderNationalityOptions(FLAG_COUNTRIES);
+      restoreCachedResult();
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-select-wrapper')) {
+          document.getElementById('nationalityDropdown').classList.remove('open');
+        }
+      });
+    });
+
+    function toggleNationalityDropdown() {
+      const dropdown = document.getElementById('nationalityDropdown');
+      dropdown.classList.toggle('open');
+      if (dropdown.classList.contains('open')) {
+        document.getElementById('nationalitySearch').focus();
+      }
+    }
+
+    function renderNationalityOptions(list) {
+      const container = document.getElementById('countryListOptions');
+      container.innerHTML = '';
+      list.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'custom-option' + (c.name === 'India' ? ' selected' : '');
+        item.innerHTML = `<span>${c.flag}</span> <span>${c.name}</span>`;
+        item.onclick = () => selectNationality(c);
+        container.appendChild(item);
+      });
+    }
+
+    function filterCountries() {
+      const q = document.getElementById('nationalitySearch').value.toLowerCase();
+      const filtered = FLAG_COUNTRIES.filter(c => c.name.toLowerCase().includes(q));
+      renderNationalityOptions(filtered);
+    }
+
+    function selectNationality(c) {
+      document.getElementById('selectedNationalityText').innerHTML = `${c.flag} ${c.name}`;
+      document.getElementById('nationalityValue').value = c.name;
+      document.getElementById('nationalityDropdown').classList.remove('open');
+    }
+
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      if (submitBtn.disabled) return;
+
+      const profile = {
+        nationality: document.getElementById('nationalityValue').value,
+        age: document.getElementById('age').value,
+        profession: document.getElementById('profession').value.trim(),
+        education: document.getElementById('education').value,
+        experience: document.getElementById('experience').value,
+        budget: document.getElementById('budget').value,
+        savings: document.getElementById('savings').value,
+        workStyle: document.getElementById('workStyle').value,
+        languages: document.getElementById('languages').value,
+        climate: document.getElementById('climate').value,
+        healthcare: document.getElementById('healthcare').value,
+        reason: document.getElementById('reason').value,
+        priorities: document.getElementById('priorities').value,
+        family: document.getElementById('family').value,
+        govtype: document.getElementById('govtype').value
+      };
+
+      if (!profile.profession || !profile.budget) {
+        showToast("Please enter your profession and monthly budget.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+
+      try {
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profile)
+        });
+
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || 'Server error.');
+
+        currentAIResult = data.result;
+        try { localStorage.setItem('settleiq_last_report', JSON.stringify({ result: data.result, profile })); } catch (e) {}
+
+        renderResults(data.result, profile);
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        showToast('⚠️ Error: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        document.getElementById('loadingState').style.display = 'none';
+      }
+    }
+
+    function restoreCachedResult() {
+      try {
+        const cached = localStorage.getItem('settleiq_last_report');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.result) {
+            currentAIResult = parsed.result;
+            renderResults(parsed.result, parsed.profile || {});
+            document.getElementById('result').style.display = 'block';
+          }
+        }
+      } catch (e) {}
+    }
+
+    // RENDER RESULTS IN CLEAN KREA STYLE
+    function renderResults(res, profile) {
+      const container = document.getElementById('countryCardsContainer');
+      container.innerHTML = '';
+
+      document.getElementById('resultsSubhead').textContent = 
+        `Custom Research for ${profile.nationality || 'Applicant'} (${profile.profession || 'Professional'})`;
+
+      document.getElementById('summaryBox').textContent = res.summary || 'Deep settlement research complete.';
+
+      if (res.rawText) {
+        container.innerHTML = `<div class="country-card visible"><div class="result-box">${marked.parse(res.rawText)}</div></div>`;
+        return;
+      }
+
+      const countries = res.countries || [];
+
+      countries.forEach((country, idx) => {
+        const card = document.createElement('div');
+        card.className = 'country-card';
+
+        const salary = country.salary || {};
+        const cost = country.costOfLiving || {};
+        const safety = country.safety || {};
+
+        card.innerHTML = `
+          <div class="country-header">
+            <div class="country-flag">${country.flag || '🏳️'}</div>
+            <div>
+              <div class="country-name">${country.name}</div>
+              <div style="font-size: 14px; color: #666666;">Visa Pathway: ${country.visaPathway || 'Skilled Work Visa'}</div>
+            </div>
+            <div class="match-score">${country.matchScore || 90}/100</div>
+          </div>
+
+          <!-- Clean Table Data Rows -->
+          <div class="data-row">
+            <span class="data-label">Gross Monthly Salary</span>
+            <span class="data-value">${salary.gross || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Income Tax Rate</span>
+            <span class="data-value">${salary.taxRate || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Net Monthly Take-Home</span>
+            <span class="data-value">${salary.netTakeHome || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Est. Monthly Cost of Living</span>
+            <span class="data-value">${cost.total || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Est. Monthly Net Savings</span>
+            <span class="data-value" style="color:#16a34a;">${country.monthlySavings || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">PR Timeline</span>
+            <span class="data-value">${country.prTimeline || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Citizenship Timeline</span>
+            <span class="data-value">${country.citizenshipTimeline || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Dual Citizenship</span>
+            <span class="data-value">${country.dualCitizenship || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">GPI 2026 Safety Ranking</span>
+            <span class="data-value">${safety.gpiRanking || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Est. Total Relocation Cost</span>
+            <span class="data-value">${country.relocationCost || 'N/A'}</span>
+          </div>
+
+          <!-- Collapsible 24 Topics Accordion -->
+          <div class="topics-container">
+            ${renderTopicToggle(idx, "1", "Job Market & Demand", country.jobMarket)}
+            ${renderTopicToggle(idx, "2", "Work-Life Balance & Leave", `${country.workLifeBalance || ''} <br>Leave: ${country.leavePolicy || 'N/A'}`)}
+            ${renderTopicToggle(idx, "3", "Visa Process & Requirements", country.visaProcess)}
+            ${renderTopicToggle(idx, "4", "Healthcare System", country.healthcare)}
+            ${renderTopicToggle(idx, "5", "Safety & Crime Level", `${safety.crimeLevel ? `Crime Level: ${safety.crimeLevel}. ` : ''}${safety.foreignerSafety || ''}`)}
+            ${renderTopicToggle(idx, "6", "Climate & Weather", country.climate)}
+            ${renderTopicToggle(idx, "7", "Language & Local Integration", country.language)}
+            ${renderTopicToggle(idx, "8", "Expat Community & Culture", country.homeCommunity)}
+            ${renderTopicToggle(idx, "9", "Taxes, Transport & Pension", `Taxes: ${country.taxes || ''} <br>Transport: ${country.transport || ''} <br>Pension: ${country.retirement || ''}`)}
+            ${renderTopicToggle(idx, "10", "Political Stability & War Risk", `Stability: ${country.politicalStability || ''} <br>War Risk: ${country.warRisk || 'Low'}`)}
+          </div>
+
+          <!-- Pros and Cons Bullets -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 24px;">
+            <div class="bullet-section">
+              <div class="bullet-title" style="color: #16a34a;">Key Advantages</div>
+              <ul class="bullet-list pros-list">
+                ${(country.pros || ['Favorable visa rules', 'High quality of life']).map(p => `<li>${p}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="bullet-section">
+              <div class="bullet-title" style="color: #666666;">Considerations</div>
+              <ul class="bullet-list cons-list">
+                ${(country.cons || ['High cost of living']).map(c => `<li>${c}</li>`).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+        setTimeout(() => card.classList.add('visible'), 50 * idx);
+      });
+
+      // Comparison Table
+      renderComparisonTable(res.comparisonTable);
+
+      // Final Verdict Card
+      if (res.finalVerdict) {
+        document.getElementById('verdictText').innerHTML = marked.parse(res.finalVerdict);
+        document.getElementById('verdictBox').style.display = 'block';
+      }
+    }
+
+    function renderTopicToggle(cIdx, tIdx, title, content) {
+      if (!content) return '';
+      const id = `topic-${cIdx}-${tIdx}`;
+      return `
+        <div class="topic-item">
+          <button class="topic-toggle" onclick="toggleTopic('${id}')">
+            <span>${title}</span>
+            <span id="chev-${id}" style="color:#666666; font-size:12px;">▼</span>
+          </button>
+          <div class="topic-content" id="${id}">${content}</div>
+        </div>
+      `;
+    }
+
+    function toggleTopic(id) {
+      const el = document.getElementById(id);
+      const chev = document.getElementById(`chev-${id}`);
+      if (!el) return;
+      el.classList.toggle('open');
+      if (chev) chev.textContent = el.classList.contains('open') ? '▲' : '▼';
+    }
+
+    function renderComparisonTable(comp) {
+      const table = document.getElementById('compareMatrixTable');
+      if (!comp || !comp.data) return;
+
+      const countries = Object.keys(comp.data);
+      const factors = comp.factors || [];
+
+      let html = `<thead><tr><th>Factor</th>${countries.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+      factors.forEach((factor, fIdx) => {
+        html += `<tr><td><strong>${factor}</strong></td>`;
+        countries.forEach(c => {
+          const val = comp.data[c] ? comp.data[c][fIdx] : 'N/A';
+          html += `<td>${val}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody>`;
+
+      table.innerHTML = html;
+    }
+
+    // EXACT WORKING PDF GENERATION FUNCTION AS SPECIFIED
+    async function downloadPDF() {
+      const resultDiv = document.getElementById('result');
+      if (!resultDiv) return;
+      
+      const btn = document.getElementById('downloadBtn');
+      btn.textContent = 'Generating PDF...';
+      btn.disabled = true;
+      
+      try {
+        const canvas = await html2canvas(resultDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          windowWidth: resultDiv.scrollWidth,
+          windowHeight: resultDiv.scrollHeight
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        pdf.save('SettleIQ_Report.pdf');
+      } catch (err) {
+        alert('PDF generation failed: ' + err.message);
+      }
+      
+      btn.textContent = 'Download PDF Report';
+      btn.disabled = false;
+    }
+
+    function shareReport() {
+      if (!currentAIResult) return;
+      const textSummary = `SettleIQ Report Summary\nTop Pick: ${currentAIResult.bestMatch || 'Pick'}\n${currentAIResult.summary || ''}`;
+      navigator.clipboard.writeText(textSummary)
+        .then(() => showToast("Copied summary to clipboard."))
+        .catch(() => showToast("Failed to copy."));
+    }
+
+    function resetForm() {
+      document.getElementById('settleForm').reset();
+      selectNationality({ name: "India", flag: "🇮🇳" });
+      document.getElementById('result').style.display = 'none';
+      currentAIResult = null;
+      try { localStorage.removeItem('settleiq_last_report'); } catch (e) {}
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast("Form reset.");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

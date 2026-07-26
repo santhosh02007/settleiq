@@ -1,0 +1,6 @@
+[2026-07-25T11:31:46.860Z] Nationality: India | Profession: Software Engineer | Budget: $3500 | Recommended: New Zealand, Ireland, United Kingdom
+[2026-07-25T11:46:43.183Z] Nationality: India | Profession: Software Engineer | Budget: $4000 | Recommended: Germany, Australia, Canada
+[2026-07-25T11:50:47.014Z] Nationality: India | Profession: Software Engineer | Budget: $4000 | Recommended: N/A
+[2026-07-25T12:28:00.214Z] Nationality: India | Profession: Software Engineer | Budget: $4000 | Recommended: N/A
+[2026-07-25T12:33:26.160Z] Nationality: India | Profession: Doctor | Budget: $8000 | Recommended: N/A
+[2026-07-26T00:55:19.490Z] Nationality: India | Profession: Software Engineer | Budget: $6000 | Recommended: Germany, Netherlands, Ireland
