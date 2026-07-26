@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Firebase Compat CDN Libraries -->
+  <!-- Firebase Compat CDN Libraries (v10.12.0) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -944,11 +944,14 @@
       measurementId: "G-2FS1XT4VG0"
     };
 
-    // Initialize Firebase Services
-    firebase.initializeApp(firebaseConfig);
+    // Initialize Firebase Services cleanly
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const auth = firebase.auth();
     const db = firebase.firestore();
     const googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
 
     const FLAG_COUNTRIES = [
       { name: "India", flag: "🇮🇳" },
@@ -1009,6 +1012,23 @@
       renderNationalityOptions(FLAG_COUNTRIES);
       restoreCachedResult();
 
+      // Check Redirect Auth Result on Load (fallback for popup restrictions)
+      auth.getRedirectResult().then(async (result) => {
+        if (result && result.user) {
+          const user = result.user;
+          await db.collection("users").doc(user.uid).set({
+            name: user.displayName || '',
+            email: user.email || '',
+            photoURL: user.photoURL || '',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          showToast(`Welcome back, ${user.displayName || 'User'}!`);
+        }
+      }).catch((error) => {
+        console.error("Redirect Auth Error:", error);
+      });
+
       document.addEventListener('click', (e) => {
         if (!e.target.closest('.custom-select-wrapper')) {
           document.getElementById('nationalityDropdown').classList.remove('open');
@@ -1044,7 +1064,7 @@
       }
     });
 
-    // GOOGLE SIGN IN
+    // COMPLETE WORKING GOOGLE SIGN IN (POPUP + REDIRECT FALLBACK)
     async function signInWithGoogle() {
       try {
         const result = await auth.signInWithPopup(googleProvider);
@@ -1060,7 +1080,18 @@
           showToast(`Welcome, ${user.displayName || 'User'}!`);
         }
       } catch (error) {
-        showToast(`Sign in error: ${error.message}`);
+        console.error("Firebase Sign In Error:", error);
+        // Fallback to redirect if popup is blocked or closed by cross-origin restrictions
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+          console.log("Popup restricted, switching to redirect flow...");
+          try {
+            await auth.signInWithRedirect(googleProvider);
+          } catch (redirectErr) {
+            showToast(`Sign in error: ${redirectErr.message}`);
+          }
+        } else {
+          showToast(`Sign in error: ${error.message}`);
+        }
       }
     }
 

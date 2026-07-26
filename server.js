@@ -9,9 +9,11 @@ const path = require('path');
 dotenv.config();
 const app = express();
 
-// Security Headers
+// Security Headers - Fixed for Firebase Auth Popup Communication & Render Deployment
 app.use(helmet({
-  contentSecurityPolicy: false // Allows loading Google Fonts, CDN scripts (html2pdf, marked), and inline scripts
+  contentSecurityPolicy: false, // Disables default CSP so CDN scripts, marked, html2pdf & Firebase work cleanly
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // CRITICAL FIX: Allows popup window (window.opener) to communicate with Firebase auth handler
+  crossOriginEmbedderPolicy: false
 }));
 
 app.use(cors());
@@ -57,7 +59,6 @@ function extractAndParseJSON(rawText) {
   } catch (err1) {
     console.warn('Initial JSON parse failed, applying regex cleanup...');
     try {
-      // Clean trailing commas before closing brackets/braces and strip unescaped control chars
       const sanitized = clean
         .replace(/,\s*([\]}])/g, '$1')
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
