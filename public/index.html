@@ -323,16 +323,6 @@
       color: #666666;
     }
 
-    /* MY REPORTS SECTION */
-    .my-reports-card {
-      background: #ffffff;
-      border: 1px solid #e5e5e5;
-      border-radius: 12px;
-      padding: 32px;
-      max-width: 860px;
-      margin: 32px auto 0;
-    }
-
     /* RESULTS SECTION — EXACT ID="RESULT" */
     #result { display: none; }
     
@@ -626,38 +616,75 @@
   <nav>
     <a href="#" class="nav-logo">SettleIQ</a>
     
-    <!-- NAVBAR AUTH UI CONTAINER -->
-    <div id="authContainer">
+    <!-- NAVBAR AUTH UI CONTAINER (FIX 4) -->
+    <div id="authContainer" style="display:flex;align-items:center;gap:12px;">
       <button id="signInBtn" onclick="signInWithGoogle()"
-        style="background:#000;color:#fff;border:none;padding:10px 20px;
-        border-radius:6px;cursor:pointer;font-family:Inter,sans-serif;
-        font-size:14px;font-weight:600;">
+        style="background:#000;color:#fff;border:none;
+        padding:10px 20px;border-radius:6px;cursor:pointer;
+        font-family:Inter,sans-serif;font-size:14px;font-weight:600;">
         Sign in with Google
       </button>
+
       <div id="userMenu" style="display:none;position:relative;">
         <div onclick="toggleDropdown()"
-          style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-          <img id="userAvatar" src="" alt=""
-            style="width:36px;height:36px;border-radius:50%;
-            object-fit:cover;border:2px solid #e5e5e5;">
+          style="display:flex;align-items:center;gap:10px;
+          cursor:pointer;padding:6px 12px;border-radius:8px;
+          border:1px solid #e5e5e5;background:#fff;">
+          <img id="userAvatar" src="" alt="avatar"
+            style="width:32px;height:32px;border-radius:50%;
+            object-fit:cover;">
           <span id="userName"
-            style="font-size:14px;font-weight:600;color:#ffffff;"></span>
-          <span style="font-size:10px;color:#888;">▼</span>
+            style="font-size:14px;font-weight:600;color:#111;"></span>
+          <span style="font-size:10px;color:#999;">▼</span>
         </div>
-        <div id="dropdown"
-          style="display:none;position:absolute;right:0;top:48px;
-          background:#fff;border:1px solid #e5e5e5;border-radius:8px;
-          min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.1);
-          z-index:1000;">
-          <div onclick="showMyReports()"
-            style="padding:12px 16px;cursor:pointer;font-size:14px;color:#111111;
-            border-bottom:1px solid #f0f0f0;">
-            My Reports
+
+        <div id="profileDropdown"
+          style="display:none;position:absolute;right:0;top:52px;
+          background:#fff;border:1px solid #e5e5e5;border-radius:12px;
+          min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.12);
+          z-index:1000;overflow:hidden;">
+
+          <div id="profileHeader"
+            style="padding:16px;border-bottom:1px solid #f0f0f0;
+            background:#f9f9f9;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <img id="dropdownAvatar" src="" alt=""
+                style="width:44px;height:44px;border-radius:50%;
+                object-fit:cover;">
+              <div>
+                <div id="dropdownName"
+                  style="font-weight:700;font-size:15px;color:#111;"></div>
+                <div id="dropdownEmail"
+                  style="font-size:12px;color:#666;margin-top:2px;"></div>
+              </div>
+            </div>
           </div>
+
+          <div onclick="scrollToReports()"
+            style="padding:12px 16px;cursor:pointer;font-size:14px;
+            color:#111;display:flex;align-items:center;gap:10px;
+            border-bottom:1px solid #f0f0f0;">
+            <span>📋</span> My Reports
+          </div>
+
+          <div onclick="scrollToTop()"
+            style="padding:12px 16px;cursor:pointer;font-size:14px;
+            color:#111;display:flex;align-items:center;gap:10px;
+            border-bottom:1px solid #f0f0f0;">
+            <span>🌍</span> New Assessment
+          </div>
+
+          <div onclick="showAccountInfo()"
+            style="padding:12px 16px;cursor:pointer;font-size:14px;
+            color:#111;display:flex;align-items:center;gap:10px;
+            border-bottom:1px solid #f0f0f0;">
+            <span>👤</span> Account Info
+          </div>
+
           <div onclick="signOutUser()"
             style="padding:12px 16px;cursor:pointer;font-size:14px;
-            color:#e53e3e;">
-            Sign Out
+            color:#e53e3e;display:flex;align-items:center;gap:10px;">
+            <span>🚪</span> Sign Out
           </div>
         </div>
       </div>
@@ -770,10 +797,24 @@
               </select>
             </div>
 
-            <!-- 6. Monthly Budget -->
+            <!-- 6. CURRENT MONTHLY EXPENSES (YOUR COUNTRY) + CURRENCY SELECTOR -->
             <div class="form-group">
-              <label for="budget">Monthly Budget (USD) *</label>
-              <input type="number" id="budget" placeholder="e.g. 3500" min="200" required />
+              <label for="budget">Current Monthly Expenses (Your Country) *</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="number" id="budget" placeholder="e.g. 50000 (in your local currency)" min="1" required style="flex: 1;" />
+                <select id="currency" required style="width: 140px; flex: none;">
+                  <option value="INR" selected>₹ INR</option>
+                  <option value="USD">$ USD</option>
+                  <option value="GBP">£ GBP</option>
+                  <option value="EUR">€ EUR</option>
+                  <option value="AED">AED</option>
+                  <option value="SGD">SGD</option>
+                  <option value="AUD">AUD</option>
+                  <option value="CAD">CAD</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div style="font-size: 12px; color: #666666; margin-top: 6px;">We will automatically calculate your equivalent purchasing power in each recommended country</div>
             </div>
 
             <!-- 7. Current Savings -->
@@ -911,14 +952,20 @@
           </div>
         </form>
       </div>
-
-      <!-- MY REPORTS SECTION (FIRESTORE SYNCED) -->
-      <div class="my-reports-card" id="myReportsSection" style="display:none;">
-        <h3 style="font-size:20px; font-weight:700; margin-bottom:20px;">Your Previous Reports</h3>
-        <div id="previousReportsList" style="display:grid; gap:16px;"></div>
-      </div>
     </div>
   </section>
+
+  <!-- MY REPORTS SECTION (FIX 3 - BELOW FORM) -->
+  <div id="myReportsSection" 
+    style="display:none;max-width:700px;margin:40px auto;padding:0 20px;">
+    <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">
+      Your Previous Reports
+    </h2>
+    <p style="color:#666;font-size:14px;margin-bottom:24px;">
+      Click any report to view the full analysis
+    </p>
+    <div id="reportsContainer"></div>
+  </div>
 
   <!-- SECTION 4: RESULTS (EXACT ID="RESULT") -->
   <section class="section-light" id="result" style="display:none;">
@@ -1102,7 +1149,7 @@
       document.addEventListener('click', (e) => {
         const menu = document.getElementById('userMenu');
         if (menu && !menu.contains(e.target)) {
-          const dd = document.getElementById('dropdown');
+          const dd = document.getElementById('profileDropdown');
           if (dd) dd.style.display = 'none';
         }
 
@@ -1122,46 +1169,70 @@
       area.value = current ? `${current}. ${text}` : text;
     }
 
-    // NAV DROPDOWN TOGGLES
+    // NAV DROPDOWN TOGGLES (FIX 4)
     function toggleDropdown() {
-      const dd = document.getElementById('dropdown');
+      const dd = document.getElementById('profileDropdown');
       if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
     }
 
-    function showMyReports() {
-      const dd = document.getElementById('dropdown');
-      if (dd) dd.style.display = 'none';
-      const sec = document.getElementById('myReportsSection');
-      if (sec) {
-        sec.style.display = 'block';
-        sec.scrollIntoView({ behavior: 'smooth' });
-      }
+    function signOutUser() {
+      firebase.auth().signOut().then(() => {
+        const pd = document.getElementById('profileDropdown');
+        if (pd) pd.style.display = 'none';
+        const section = document.getElementById('myReportsSection');
+        if (section) section.style.display = 'none';
+        console.log('Signed out');
+      });
     }
 
-    // AUTH STATE LISTENER
-    firebase.auth().onAuthStateChanged(function(user) {
-      const signInBtn = document.getElementById('signInBtn');
-      const userMenu = document.getElementById('userMenu');
-      const userAvatar = document.getElementById('userAvatar');
-      const userName = document.getElementById('userName');
-      const myReportsSec = document.getElementById('myReportsSection');
+    function scrollToReports() {
+      const pd = document.getElementById('profileDropdown');
+      if (pd) pd.style.display = 'none';
+      const sec = document.getElementById('myReportsSection');
+      if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+    }
 
+    function scrollToTop() {
+      const pd = document.getElementById('profileDropdown');
+      if (pd) pd.style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showAccountInfo() {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const pd = document.getElementById('profileDropdown');
+      if (pd) pd.style.display = 'none';
+      alert(
+        'Account Info\n\n' +
+        'Name: ' + (user.displayName || 'N/A') + '\n' +
+        'Email: ' + (user.email || 'N/A') + '\n' +
+        'Account created: ' + 
+        (user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'N/A') + '\n' +
+        'Last sign in: ' + 
+        (user.metadata && user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString() : 'N/A')
+      );
+    }
+
+    // AUTH STATE LISTENER (FIX 4)
+    firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
-        if (signInBtn) signInBtn.style.display = 'none';
-        if (userMenu) userMenu.style.display = 'block';
-        if (userAvatar) userAvatar.src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
-        if (userName) userName.textContent = user.displayName ? user.displayName.split(' ')[0] : 'User';
+        document.getElementById('signInBtn').style.display = 'none';
+        document.getElementById('userMenu').style.display = 'block';
+        document.getElementById('userAvatar').src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+        document.getElementById('dropdownAvatar').src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+        document.getElementById('userName').textContent = 
+          user.displayName ? user.displayName.split(' ')[0] : 'User';
+        document.getElementById('dropdownName').textContent = 
+          user.displayName || 'User';
+        document.getElementById('dropdownEmail').textContent = 
+          user.email || '';
         loadMyReports(user.uid);
       } else {
-        if (signInBtn) signInBtn.style.display = 'block';
-        if (userMenu) userMenu.style.display = 'none';
-        if (myReportsSec) {
-          myReportsSec.style.display = 'block';
-          myReportsSec.innerHTML = `
-            <h3 style="font-size:20px; font-weight:700; margin-bottom:12px;">Your Previous Reports</h3>
-            <p style="font-size:14px; color:#666666;">Sign in with Google above to save and access your personalized settlement reports across devices.</p>
-          `;
-        }
+        document.getElementById('signInBtn').style.display = 'block';
+        document.getElementById('userMenu').style.display = 'none';
+        const section = document.getElementById('myReportsSection');
+        if (section) section.style.display = 'none';
       }
     });
 
@@ -1194,103 +1265,89 @@
       }
     }
 
-    // SIGN OUT
-    async function signOutUser() {
-      try {
-        await auth.signOut();
-        const dd = document.getElementById('dropdown');
-        if (dd) dd.style.display = 'none';
-        showToast("Signed out successfully.");
-      } catch (error) {
-        showToast(`Sign out error: ${error.message}`);
-      }
-    }
+    // LOAD MY REPORTS FROM FIRESTORE (FIX 2)
+    function loadMyReports(uid) {
+      console.log('Loading reports for:', uid);
+      const section = document.getElementById('myReportsSection');
+      const container = document.getElementById('reportsContainer');
+      
+      if (!section || !container) return;
+      section.style.display = 'block';
+      container.innerHTML = '<p style="color:#666;">Loading your reports...</p>';
 
-    // LOAD MY REPORTS FROM FIRESTORE (COLLECTION: users/{uid}/reports)
-    async function loadMyReports(uid) {
-      const sec = document.getElementById('myReportsSection');
-      if (!uid || !sec) return;
-
-      sec.style.display = 'block';
-      sec.innerHTML = `
-        <h3 style="font-size:20px; font-weight:700; margin-bottom:20px;">Your Previous Reports</h3>
-        <div id="previousReportsList" style="display:grid; gap:16px;">
-          <div style="font-size:14px; color:#666666; text-align:center; padding:16px;">Loading your saved reports...</div>
-        </div>
-      `;
-
-      const list = document.getElementById('previousReportsList');
-
-      try {
-        const snapshot = await db.collection("users").doc(uid).collection("reports")
-          .orderBy("timestamp", "desc")
-          .limit(10)
-          .get();
-
-        if (snapshot.empty) {
-          list.innerHTML = `<div style="font-size:14px; color:#666666; padding:12px;">No saved reports found. Complete an assessment above to auto-save reports!</div>`;
-          return;
-        }
-
-        list.innerHTML = '';
-
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const docId = doc.id;
-          const firstCountry = data.fullResultJSON && data.fullResultJSON.countries && data.fullResultJSON.countries[0] ? data.fullResultJSON.countries[0] : null;
-          const flag = firstCountry ? (firstCountry.flag || '🏳️') : '🌐';
-          const countryName = data.topCountry || (firstCountry ? firstCountry.name : 'Report');
-          const score = data.matchScore || (firstCountry ? firstCountry.matchScore : 90);
-          
-          let dateStr = 'Recent';
-          if (data.timestamp && data.timestamp.toDate) {
-            const dt = data.timestamp.toDate();
-            dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      firebase.firestore()
+        .collection('users')
+        .doc(uid)
+        .collection('reports')
+        .orderBy('timestamp', 'desc')
+        .limit(10)
+        .get()
+        .then(snapshot => {
+          console.log('Reports loaded:', snapshot.size);
+          if (snapshot.empty) {
+            container.innerHTML = 
+              '<p style="color:#666;text-align:center;">No reports yet. Generate your first report above!</p>';
+            return;
           }
-
-          const card = document.createElement('div');
-          card.id = `report-card-${docId}`;
-          card.style.cssText = 'background:#f9f9f9; border:1px solid #e5e5e5; border-radius:8px; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;';
-
-          card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:28px;">${flag}</span>
-              <div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <span style="font-size:16px; font-weight:700; color:#111111;">${countryName}</span>
-                  <span style="background:#000000; color:#ffffff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;">${score}/100</span>
+          container.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const date = data.createdAt ? 
+              new Date(data.createdAt).toLocaleDateString('en-IN', 
+                {day:'numeric', month:'short', year:'numeric'}) : 'Recent';
+            const card = document.createElement('div');
+            card.id = `report-card-${doc.id}`;
+            card.style.cssText = 
+              'background:#fff;border:1px solid #e5e5e5;border-radius:12px;' +
+              'padding:20px;margin-bottom:16px;';
+            card.innerHTML = `
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <div>
+                  <div style="font-weight:700;font-size:16px;color:#111;">
+                    ${data.profession || 'Report'}</div>
+                  <div style="font-size:13px;color:#666;margin-top:4px;">
+                    ${data.nationality || ''} · ${data.currency || 'INR'} ${data.budget || ''}/mo · ${date}</div>
                 </div>
-                <div style="font-size:13px; color:#666666;">${data.profession || 'Professional'} · Passport: ${data.nationality || 'Global'} · $${data.budget || '0'}/mo</div>
-                <div style="font-size:12px; color:#888888; margin-top:2px;">Generated on ${dateStr}</div>
+                <div style="display:flex;gap:8px;">
+                  <button onclick="viewReport('${doc.id}', this)"
+                    style="background:#000;color:#fff;border:none;
+                    padding:8px 16px;border-radius:6px;cursor:pointer;
+                    font-size:13px;font-weight:600;">
+                    View
+                  </button>
+                  <button onclick="deleteReport('${doc.id}', '${uid}', this)"
+                    style="background:#fff;color:#e53e3e;
+                    border:1px solid #e53e3e;padding:8px 16px;
+                    border-radius:6px;cursor:pointer;font-size:13px;">
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div style="display:flex; gap:8px; align-items:center;">
-              <button class="btn-action-dark" style="padding:8px 14px; font-size:13px; flex:none;" onclick="viewSavedReport('${docId}')">View Report</button>
-              <button class="btn-action-outline" style="padding:8px 14px; font-size:13px; color:#b91c1c; border-color:#fca5a5; flex:none;" onclick="deleteSavedReport('${uid}', '${docId}')">Delete</button>
-            </div>
-          `;
-          card.dataset.fullHtml = data.fullResultHTML || '';
-          if (data.fullResultJSON) {
-            card.dataset.fullJson = JSON.stringify(data.fullResultJSON);
-          }
-          if (data.allInputs) {
-            card.dataset.allInputs = JSON.stringify(data.allInputs);
-          }
-          list.appendChild(card);
+              <div id="reportContent-${doc.id}" style="display:none;">
+                ${data.fullResultHTML || ''}
+              </div>
+            `;
+            if (data.fullResultJSON) {
+              card.dataset.fullJson = JSON.stringify(data.fullResultJSON);
+            }
+            if (data.allInputs) {
+              card.dataset.allInputs = JSON.stringify(data.allInputs);
+            }
+            container.appendChild(card);
+          });
+        })
+        .catch(err => {
+          console.error('Error loading reports:', err);
+          container.innerHTML = 
+            '<p style="color:#e53e3e;">Error loading reports. Please refresh.</p>';
         });
-
-      } catch (err) {
-        console.error("Error loading previous reports from Firestore:", err);
-        list.innerHTML = `<div style="font-size:14px; color:#b91c1c;">Error loading saved reports: ${err.message}</div>`;
-      }
     }
 
-    function viewSavedReport(docId) {
-      const card = document.getElementById(`report-card-${docId}`);
-      if (!card) return;
+    function viewReport(docId, btn) {
+      const card = document.getElementById('report-card-' + docId);
+      const content = document.getElementById('reportContent-' + docId);
 
-      if (card.dataset.fullJson) {
+      if (card && card.dataset.fullJson) {
         try {
           const parsedRes = JSON.parse(card.dataset.fullJson);
           const parsedInputs = card.dataset.allInputs ? JSON.parse(card.dataset.allInputs) : {};
@@ -1304,24 +1361,29 @@
         } catch (e) {}
       }
 
-      if (card.dataset.fullHtml) {
-        document.getElementById('result').innerHTML = card.dataset.fullHtml;
-        document.getElementById('result').style.display = 'block';
-        document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
-        showToast("Loaded saved report onto screen.");
+      if (!content) return;
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        btn.textContent = 'Hide';
+      } else {
+        content.style.display = 'none';
+        btn.textContent = 'View';
       }
     }
 
-    async function deleteSavedReport(uid, docId) {
-      if (!confirm("Are you sure you want to delete this saved report?")) return;
-      try {
-        await db.collection("users").doc(uid).collection("reports").doc(docId).delete();
-        const card = document.getElementById(`report-card-${docId}`);
-        if (card) card.remove();
-        showToast("Report deleted.");
-      } catch (err) {
-        showToast("Delete error: " + err.message);
-      }
+    function deleteReport(docId, uid, btn) {
+      if (!confirm('Delete this report?')) return;
+      firebase.firestore()
+        .collection('users').doc(uid)
+        .collection('reports').doc(docId)
+        .delete()
+        .then(() => {
+          const card = document.getElementById('report-card-' + docId) || btn.closest('div[style*="background"]');
+          if (card) card.remove();
+          console.log('Report deleted');
+          showToast('Report deleted.');
+        })
+        .catch(err => console.error('Delete error:', err));
     }
 
     function toggleNationalityDropdown() {
@@ -1369,6 +1431,7 @@
         education: document.getElementById('education').value,
         experience: document.getElementById('experience').value,
         budget: document.getElementById('budget').value,
+        currency: document.getElementById('currency').value,
         savings: document.getElementById('savings').value,
         workStyle: document.getElementById('workStyle').value,
         languages: document.getElementById('languages').value,
@@ -1382,7 +1445,7 @@
       };
 
       if (!profile.profession || !profile.budget) {
-        showToast("Please enter your profession and monthly budget.");
+        showToast("Please enter your profession and monthly expenses.");
         return;
       }
 
@@ -1408,27 +1471,31 @@
         document.getElementById('result').style.display = 'block';
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
-        // AUTO-SAVE REPORT TO FIRESTORE: users/{uid}/reports/{timestamp}
-        if (auth.currentUser) {
-          const currentUser = auth.currentUser;
-          const topCountryName = data.result.bestMatch || (data.result.countries && data.result.countries[0] ? data.result.countries[0].name : '');
-          const matchScoreVal = (data.result.countries && data.result.countries[0]) ? data.result.countries[0].matchScore : 95;
-
-          db.collection("users").doc(currentUser.uid).collection("reports").add({
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            nationality: profile.nationality,
-            profession: profile.profession,
-            budget: profile.budget,
-            topCountry: topCountryName,
-            matchScore: matchScoreVal,
-            fullResultHTML: document.getElementById('result').innerHTML,
-            allInputs: profile,
-            fullResultJSON: data.result
-          }).then(() => {
-            loadMyReports(currentUser.uid);
-          }).catch(err => {
-            console.error("Firestore auto-save error:", err);
-          });
+        // FIX 1 — SAVE REPORT TO FIRESTORE IMMEDIATELY AFTER DISPLAYING RESULT
+        const user = firebase.auth().currentUser;
+        if (user) {
+          console.log('Saving report for user:', user.uid);
+          firebase.firestore()
+            .collection('users')
+            .doc(user.uid)
+            .collection('reports')
+            .add({
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              createdAt: new Date().toISOString(),
+              profession: document.getElementById('profession').value || '',
+              nationality: document.getElementById('nationalityValue') ? document.getElementById('nationalityValue').value : '',
+              budget: document.getElementById('budget').value || '',
+              currency: document.getElementById('currency') ? document.getElementById('currency').value : 'INR',
+              topCountry: (data.result && data.result.bestMatch) ? data.result.bestMatch : 'See full report',
+              fullResultHTML: document.getElementById('result').innerHTML,
+              allInputs: profile,
+              fullResultJSON: data.result
+            })
+            .then(() => {
+              console.log('Report saved successfully');
+              loadMyReports(user.uid);
+            })
+            .catch(err => console.error('Error saving report:', err));
         }
 
       } catch (err) {
@@ -1498,6 +1565,12 @@
               <div style="font-size: 14px; color: #666666;">Visa Pathway: ${country.visaPathway || 'Skilled Work Visa'}</div>
             </div>
             <div class="match-score">${country.matchScore || 90}/100</div>
+          </div>
+
+          <!-- BUDGET EQUIVALENT CONVERSION ROW -->
+          <div class="data-row" style="background:#f0fdf4; margin: 12px 0; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0;">
+            <span class="data-label" style="font-weight: 700; color: #166534;">Your Budget Equivalent</span>
+            <span class="data-value" style="color: #15803d; font-weight: 700; text-align: right;">${country.budgetEquivalent || (profile.budget ? `${profile.budget} ${profile.currency || 'USD'}/month equivalent` : 'N/A')}</span>
           </div>
 
           <!-- Clean Table Data Rows -->
@@ -1676,7 +1749,7 @@
       table.innerHTML = html;
     }
 
-    // COMPLETE TEXT-BASED jsPDF REWRITE (ZERO CANVAS, SUB-300KB FILE SIZE)
+    // COMPLETE TEXT-BASED jsPDF REWRITE (UPDATED FOR BUDGET EXPENSES & CURRENCY)
     async function downloadPDF() {
       const btn = document.getElementById('downloadBtn');
       btn.textContent = 'Generating PDF...';
@@ -1768,7 +1841,7 @@
         addHeading('Report Overview');
         addDataRow('Applicant Passport', currentProfile.nationality || 'Global');
         addDataRow('Profession', currentProfile.profession || 'Professional');
-        addDataRow('Monthly Budget', '$' + (currentProfile.budget || '0') + ' USD');
+        addDataRow('Monthly Expenses (home country)', (currentProfile.budget || '0') + ' ' + (currentProfile.currency || 'USD'));
         addDataRow('Date Generated', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
         if (currentProfile.additionalContext) {
           addDataRow('Personal Preferences', currentProfile.additionalContext);
@@ -1790,6 +1863,9 @@
             y += 8;
 
             addHeading(`Option ${cIdx + 1}: ${country.name} (Match Score: ${country.matchScore || 90}/100)`);
+            if (country.budgetEquivalent) {
+              addDataRow('Your Budget Equivalent', country.budgetEquivalent);
+            }
             addDataRow('Visa Pathway', country.visaPathway);
             addDataRow('Gross Monthly Salary', country.salary ? country.salary.gross : 'N/A');
             addDataRow('Income Tax Rate', country.salary ? country.salary.taxRate : 'N/A');

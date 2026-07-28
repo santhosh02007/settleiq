@@ -73,7 +73,7 @@ function extractAndParseJSON(rawText) {
 // Request Logger: appends request evidence to logs.txt
 function logRequest({ nationality, profession, budget, recommendedCountries }) {
   const timestamp = new Date().toISOString();
-  const logLine = `[${timestamp}] Nationality: ${nationality} | Profession: ${profession} | Budget: $${budget} | Recommended: ${recommendedCountries || 'N/A'}\n`;
+  const logLine = `[${timestamp}] Nationality: ${nationality} | Profession: ${profession} | Budget: ${budget} | Recommended: ${recommendedCountries || 'N/A'}\n`;
   fs.appendFile(path.join(__dirname, 'logs.txt'), logLine, (err) => {
     if (err) console.error('Failed to write to logs.txt:', err.message);
   });
@@ -85,6 +85,7 @@ app.post('/analyze', analyzeLimiter, async (req, res) => {
   const age = sanitize(rawBody.age);
   const profession = sanitize(rawBody.profession);
   const budget = sanitize(String(rawBody.budget || ''));
+  const currency = sanitize(rawBody.currency || 'USD');
   const languages = sanitize(rawBody.languages);
   const reason = sanitize(rawBody.reason);
   const priorities = sanitize(rawBody.priorities);
@@ -115,7 +116,7 @@ USER PROFILE:
 - Profession/Skill: ${profession}
 - Education Level: ${education}
 - Work Experience: ${experience}
-- Monthly Budget (USD): ${budget}
+- Current Monthly Expenses (Home Country): ${budget} ${currency}
 - Current Savings: ${savings}
 - Work Style: ${workStyle}
 - Language Skills: ${languages}
@@ -126,6 +127,12 @@ USER PROFILE:
 - Family Situation: ${family}
 - Government Preference: ${govtype}
 - Additional Personal Context: ${additionalContext || 'None provided'}
+
+Convert the user's current monthly expenses (${budget} ${currency}) to USD equivalent and use it to calculate:
+1. What lifestyle this budget supports in each recommended country
+2. Whether the user needs a salary increase or can maintain their current lifestyle
+3. PPP-adjusted comparison — how far this money goes in each country
+4. Estimated monthly expenses in each recommended country in both USD and their home currency (${currency})
 
 CRITICAL REQUIREMENTS FOR YOUR RESPONSE:
 - Minimum 300 words per country section
@@ -141,7 +148,7 @@ CRITICAL REQUIREMENTS FOR YOUR RESPONSE:
   Best for lifestyle: [country]  
   Best for fastest PR: [country]
 - Do NOT use emoji for ratings — use text like Excellent (5/5) or Good (4/5) or numeric scores like 8/10
-- Parse any preferences in Additional Personal Context (e.g. dogs, ocean/beach, halal food, elderly parents, school age children, spouse profession) and factor them into country selection and analysis.
+- Parse any preferences in Additional Personal Context and factor them into country selection and analysis.
 
 Recommend the TOP 3 countries for this person to settle permanently.
 
@@ -161,6 +168,7 @@ Return ONLY valid JSON. No text outside JSON. Structure:
       "matchScore": 95,
       "visaPathway": "Specific visa route name",
       "relocationCost": "$X,000 - $Y,000 USD",
+      "budgetEquivalent": "${budget} ${currency}/month = ~$X USD = Y local currency in Country Name (covers basic/comfortable lifestyle)",
       "jobMarket": "Detailed paragraph analyzing job demand for ${profession}.",
       "hiringCompanies": ["Company 1", "Company 2", "Company 3", "Company 4", "Company 5"],
       "salary": {
@@ -271,7 +279,7 @@ Return ONLY valid JSON. No text outside JSON. Structure:
     }
 
     // Log request as competition proof of production AI execution
-    logRequest({ nationality, profession, budget, recommendedCountries: recommendedNames });
+    logRequest({ nationality, profession, budget: `${budget} ${currency}`, recommendedCountries: recommendedNames });
 
     return res.json({ result: parsedResult });
 
