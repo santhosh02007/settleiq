@@ -11,8 +11,8 @@ const app = express();
 
 // Security Headers - Fixed for Firebase Auth Popup Communication & Render Deployment
 app.use(helmet({
-  contentSecurityPolicy: false, // Disables default CSP so CDN scripts, marked, html2pdf & Firebase work cleanly
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // CRITICAL FIX: Allows popup window (window.opener) to communicate with Firebase auth handler
+  contentSecurityPolicy: false, // Disables default CSP so CDN scripts, marked, & Firebase work cleanly
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Allows popup window (window.opener) to communicate with Firebase auth handler
   crossOriginEmbedderPolicy: false
 }));
 
@@ -36,7 +36,7 @@ function sanitize(input) {
     .replace(/[\r\n\t]/g, ' ')
     .replace(/[^\w\s\-\.,\/\(\)\$\+\%\:\;]/gi, '')
     .trim()
-    .slice(0, 300);
+    .slice(0, 500);
 }
 
 // Robust JSON extraction & cleanup helper
@@ -96,8 +96,9 @@ app.post('/analyze', analyzeLimiter, async (req, res) => {
   const climate = sanitize(rawBody.climate);
   const workStyle = sanitize(rawBody.workStyle);
   const healthcare = sanitize(rawBody.healthcare);
+  const additionalContext = sanitize(rawBody.additionalContext || '');
 
-  // Input Validation - Check all fields exist
+  // Input Validation - Check all profile fields exist
   if (!nationality || !age || !profession || !budget || !languages || !reason || 
       !priorities || !family || !govtype || !education || !experience || 
       !savings || !climate || !workStyle || !healthcare) {
@@ -106,7 +107,7 @@ app.post('/analyze', analyzeLimiter, async (req, res) => {
     });
   }
 
-  const prompt = `You are SettleIQ, the world's most comprehensive AI immigration advisor. A user wants to permanently settle abroad.
+  const prompt = `You are SettleIQ, the world's premier AI immigration advisor for the Build with Gemini XPRIZE. A user wants to permanently settle abroad.
 
 USER PROFILE:
 - Nationality/Passport: ${nationality}
@@ -124,48 +125,44 @@ USER PROFILE:
 - Top Settlement Priority: ${priorities}
 - Family Situation: ${family}
 - Government Preference: ${govtype}
+- Additional Personal Context: ${additionalContext || 'None provided'}
+
+CRITICAL REQUIREMENTS FOR YOUR RESPONSE:
+- Minimum 300 words per country section
+- Every metric must have an actual specific value — no placeholders, vague text, or TBD statements
+- Salary figures: specific monthly amounts for ${profession} in that country (gross and net after tax)
+- PR timeline: specific years with exact visa route name
+- Citizenship timeline: specific years from arrival
+- Job market: name 5 actual companies hiring ${profession} in that country
+- Cost of living breakdown: rent + food + transport + utilities separately
+- Include a RED FLAGS section per country (honest risks, challenges, and visa hurdles)
+- End with ranked verdict:
+  Best for income: [country]
+  Best for lifestyle: [country]  
+  Best for fastest PR: [country]
+- Do NOT use emoji for ratings — use text like Excellent (5/5) or Good (4/5) or numeric scores like 8/10
+- Parse any preferences in Additional Personal Context (e.g. dogs, ocean/beach, halal food, elderly parents, school age children, spouse profession) and factor them into country selection and analysis.
 
 Recommend the TOP 3 countries for this person to settle permanently.
 
-For EACH country, provide DEEP analysis covering ALL these topics:
-
-1. IT/PROFESSIONAL JOB MARKET
-2. SALARY & NET INCOME
-3. COST OF LIVING (monthly breakdown)
-4. SAVINGS POTENTIAL
-5. WORK-LIFE BALANCE
-6. LEAVE & HOLIDAYS
-7. VISA PROCESS
-8. PERMANENT RESIDENCY PATH
-9. CITIZENSHIP PATH
-10. HEALTHCARE
-11. SAFETY & SOCIAL ENVIRONMENT
-12. CLIMATE & WEATHER
-13. LANGUAGE SITUATION
-14. HOME COUNTRY COMMUNITY
-15. TAXES & BENEFITS
-16. JOB SECURITY & LABOR LAWS
-17. PUBLIC TRANSPORT
-18. RETIREMENT & PENSION
-19. DIGITAL INFRASTRUCTURE
-20. LIFESTYLE & MENTAL WELLBEING
-21. DUAL CITIZENSHIP RULES
-22. WAR, POLITICAL STABILITY & FUTURE SAFETY
-23. RELOCATION COST ESTIMATE
-24. PERSONALIZED FIT SCORE BREAKDOWN
-
 Return ONLY valid JSON. No text outside JSON. Structure:
 {
-  "summary": "2-3 sentence overview of analysis tailored to ${nationality} passport",
+  "summary": "Detailed 2-3 sentence overview of analysis tailored to ${nationality} passport and user preferences.",
   "bestMatch": "Country Name",
+  "rankedVerdict": {
+    "bestForIncome": "Country Name — Brief reason",
+    "bestForLifestyle": "Country Name — Brief reason",
+    "bestForFastestPR": "Country Name — Brief reason"
+  },
   "countries": [
     {
       "name": "Country Name",
       "flag": "emoji",
       "matchScore": 95,
-      "visaPathway": "Specific visa name",
+      "visaPathway": "Specific visa route name",
       "relocationCost": "$X,000 - $Y,000 USD",
-      "jobMarket": "detailed paragraph",
+      "jobMarket": "Detailed paragraph analyzing job demand for ${profession}.",
+      "hiringCompanies": ["Company 1", "Company 2", "Company 3", "Company 4", "Company 5"],
       "salary": {
         "gross": "$X,000/month",
         "netTakeHome": "$X,000/month",
@@ -176,34 +173,35 @@ Return ONLY valid JSON. No text outside JSON. Structure:
         "rent": "$X,000/month",
         "groceries": "$XXX/month",
         "transport": "$XXX/month",
+        "utilities": "$XXX/month",
         "total": "$X,XXX/month"
       },
       "monthlySavings": "$X,000/month",
-      "workLifeBalance": "detailed paragraph",
-      "leavePolicy": "X days paid + X public holidays",
-      "visaProcess": "detailed paragraph",
-      "prTimeline": "X years with conditions",
+      "workLifeBalance": "Detailed paragraph on work culture.",
+      "leavePolicy": "X days paid annual leave + X public holidays",
+      "visaProcess": "Detailed paragraph explaining requirements.",
+      "prTimeline": "X years via specific visa pathway",
       "citizenshipTimeline": "X years total",
-      "dualCitizenship": "Yes/No + details",
-      "languageTest": "Required/Not required + details",
-      "healthcare": "detailed paragraph",
+      "dualCitizenship": "Allowed / Allowed with conditions / Not allowed",
+      "languageTest": "Required level / Not required",
+      "healthcare": "Detailed paragraph on health system.",
       "safety": {
         "gpiRanking": "#X globally (GPI 2026)",
-        "crimeLevel": "Very Low/Low/Moderate",
-        "foreignerSafety": "paragraph"
+        "crimeLevel": "Very Low / Low / Moderate",
+        "foreignerSafety": "Detailed paragraph"
       },
-      "climate": "detailed paragraph with temperatures",
-      "language": "detailed paragraph",
-      "homeCommunity": "paragraph about expat community",
-      "taxes": "detailed paragraph",
-      "jobSecurity": "paragraph",
-      "transport": "paragraph",
-      "retirement": "paragraph",
-      "digital": "paragraph",
-      "lifestyle": "paragraph",
-      "politicalStability": "paragraph",
-      "warRisk": "Low/Medium/High + explanation",
-      "personalizedReason": "Why this specifically suits this person",
+      "climate": "Detailed paragraph",
+      "language": "Detailed paragraph",
+      "homeCommunity": "Paragraph on expat community",
+      "taxes": "Detailed paragraph",
+      "jobSecurity": "Paragraph",
+      "transport": "Paragraph",
+      "retirement": "Paragraph",
+      "digital": "Paragraph",
+      "lifestyle": "Paragraph",
+      "politicalStability": "Paragraph",
+      "warRisk": "Low / Medium / High — explanation",
+      "personalizedReason": "Why this specifically suits the user's profile and additional context.",
       "scores": {
         "career": 9,
         "financial": 8,
@@ -212,8 +210,9 @@ Return ONLY valid JSON. No text outside JSON. Structure:
         "safety": 10,
         "climate": 7
       },
-      "pros": ["pro1", "pro2", "pro3", "pro4", "pro5"],
-      "cons": ["con1", "con2", "con3"]
+      "pros": ["Pro 1", "Pro 2", "Pro 3", "Pro 4", "Pro 5"],
+      "cons": ["Con 1", "Con 2", "Con 3"],
+      "redFlags": ["Red flag 1", "Red flag 2", "Red flag 3"]
     }
   ],
   "comparisonTable": {
@@ -225,9 +224,9 @@ Return ONLY valid JSON. No text outside JSON. Structure:
     }
   },
   "runnerUps": [
-    {"name": "Country", "flag": "emoji", "briefReason": "why it's worth considering"}
+    {"name": "Country", "flag": "emoji", "briefReason": "why it is worth considering"}
   ],
-  "finalVerdict": "2-3 paragraph honest final recommendation explaining exactly which country and why for THIS specific person"
+  "finalVerdict": "Detailed final recommendation paragraph explaining exact country choice for THIS specific user."
 }`;
 
   try {

@@ -220,7 +220,7 @@
       margin-bottom: 8px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 12px 16px;
       border: 1px solid #e5e5e5;
@@ -232,9 +232,34 @@
       outline: none;
       transition: border-color 0.15s;
     }
-    input:focus, select:focus {
+    input:focus, select:focus, textarea:focus {
       border-color: #000000;
       box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+    }
+
+    /* SUGGESTION CHIPS */
+    .chips-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip {
+      background: #f5f5f5;
+      border: 1px solid #e5e5e5;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333333;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .chip:hover {
+      background: #000000;
+      color: #ffffff;
+      border-color: #000000;
     }
 
     /* SEARCHABLE FLAG NATIONALITY DROPDOWN */
@@ -396,7 +421,7 @@
     }
     .topic-content.open { display: block; }
 
-    /* PROS & CONS BULLETS */
+    /* PROS, CONS & RED FLAGS BULLETS */
     .bullet-section { margin-top: 24px; }
     .bullet-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
     .bullet-list { list-style: none; }
@@ -420,6 +445,14 @@
       position: absolute;
       left: 0;
       color: #666666;
+      font-weight: 700;
+    }
+    .flags-list li { color: #b91c1c; }
+    .flags-list li::before {
+      content: '⚠';
+      position: absolute;
+      left: 0;
+      color: #dc2626;
       font-weight: 700;
     }
 
@@ -595,32 +628,35 @@
     
     <!-- NAVBAR AUTH UI CONTAINER -->
     <div id="authContainer">
-      <button id="signInBtn" onclick="signInWithGoogle()" 
-        style="background:#ffffff;color:#000000;border:none;padding:10px 20px;
+      <button id="signInBtn" onclick="signInWithGoogle()"
+        style="background:#000;color:#fff;border:none;padding:10px 20px;
         border-radius:6px;cursor:pointer;font-family:Inter,sans-serif;
         font-size:14px;font-weight:600;">
         Sign in with Google
       </button>
       <div id="userMenu" style="display:none;position:relative;">
-        <div onclick="toggleDropdown()" 
+        <div onclick="toggleDropdown()"
           style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-          <img id="userAvatar" src="" alt="" 
-            style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
-          <span id="userName" 
+          <img id="userAvatar" src="" alt=""
+            style="width:36px;height:36px;border-radius:50%;
+            object-fit:cover;border:2px solid #e5e5e5;">
+          <span id="userName"
             style="font-size:14px;font-weight:600;color:#ffffff;"></span>
           <span style="font-size:10px;color:#888;">▼</span>
         </div>
-        <div id="dropdown" 
+        <div id="dropdown"
           style="display:none;position:absolute;right:0;top:48px;
-          background:#ffffff;border:1px solid #e5e5e5;border-radius:8px;
-          min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:1000;">
-          <div onclick="showMyReports()" 
+          background:#fff;border:1px solid #e5e5e5;border-radius:8px;
+          min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.1);
+          z-index:1000;">
+          <div onclick="showMyReports()"
             style="padding:12px 16px;cursor:pointer;font-size:14px;color:#111111;
             border-bottom:1px solid #f0f0f0;">
-            📋 My Reports
+            My Reports
           </div>
-          <div onclick="signOutUser()" 
-            style="padding:12px 16px;cursor:pointer;font-size:14px;color:#e53e3e;">
+          <div onclick="signOutUser()"
+            style="padding:12px 16px;cursor:pointer;font-size:14px;
+            color:#e53e3e;">
             Sign Out
           </div>
         </div>
@@ -846,6 +882,24 @@
               </select>
             </div>
 
+            <!-- 16. FREE-TEXT ADDITIONAL CONTEXT FIELD -->
+            <div class="form-group span-2">
+              <label for="additionalContext">Anything else you want us to know?</label>
+              <textarea id="additionalContext" rows="4" placeholder="e.g. I want to be near a beach, I have a dog, my wife is a nurse, I need halal food..."></textarea>
+              
+              <!-- SUGGESTION CHIPS -->
+              <div class="chips-wrapper">
+                <span class="chip" onclick="addChipText('I have a pet')">+ I have a pet</span>
+                <span class="chip" onclick="addChipText('My spouse works in healthcare')">+ My spouse works in healthcare</span>
+                <span class="chip" onclick="addChipText('I prefer English-speaking countries')">+ English-speaking countries</span>
+                <span class="chip" onclick="addChipText('I want halal/vegetarian food')">+ Halal/Vegetarian food</span>
+                <span class="chip" onclick="addChipText('I have kids of school age')">+ Kids of school age</span>
+                <span class="chip" onclick="addChipText('I want to be near the ocean')">+ Near the ocean</span>
+                <span class="chip" onclick="addChipText('I have elderly parents to bring')">+ Elderly parents to bring</span>
+                <span class="chip" onclick="addChipText('I work fully remote')">+ Work fully remote</span>
+              </div>
+            </div>
+
           </div>
 
           <button type="submit" class="btn-submit" id="submitBtn">
@@ -858,7 +912,7 @@
         </form>
       </div>
 
-      <!-- MY REPORTS SECTION (LOADED FROM FIRESTORE WHEN LOGGED IN) -->
+      <!-- MY REPORTS SECTION (FIRESTORE SYNCED) -->
       <div class="my-reports-card" id="myReportsSection" style="display:none;">
         <h3 style="font-size:20px; font-weight:700; margin-bottom:20px;">Your Previous Reports</h3>
         <div id="previousReportsList" style="display:grid; gap:16px;"></div>
@@ -1022,12 +1076,13 @@
     ];
 
     let currentAIResult = null;
+    let currentProfile = {};
 
     document.addEventListener('DOMContentLoaded', () => {
       renderNationalityOptions(FLAG_COUNTRIES);
       restoreCachedResult();
 
-      // Check Redirect Auth Result on Load (fallback for popup restrictions)
+      // Check Redirect Auth Result on Load
       auth.getRedirectResult().then(async (result) => {
         if (result && result.user) {
           const user = result.user;
@@ -1045,11 +1100,27 @@
       });
 
       document.addEventListener('click', (e) => {
+        const menu = document.getElementById('userMenu');
+        if (menu && !menu.contains(e.target)) {
+          const dd = document.getElementById('dropdown');
+          if (dd) dd.style.display = 'none';
+        }
+
         if (!e.target.closest('.custom-select-wrapper')) {
-          document.getElementById('nationalityDropdown').classList.remove('open');
+          const natDrop = document.getElementById('nationalityDropdown');
+          if (natDrop) natDrop.classList.remove('open');
         }
       });
     });
+
+    // CHIP SUGGESTIONS FOR ADDITIONAL CONTEXT
+    function addChipText(text) {
+      const area = document.getElementById('additionalContext');
+      if (!area) return;
+      const current = area.value.trim();
+      if (current.includes(text)) return;
+      area.value = current ? `${current}. ${text}` : text;
+    }
 
     // NAV DROPDOWN TOGGLES
     function toggleDropdown() {
@@ -1067,15 +1138,6 @@
       }
     }
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-      const userMenu = document.getElementById('userMenu');
-      if (userMenu && !userMenu.contains(e.target)) {
-        const dd = document.getElementById('dropdown');
-        if (dd) dd.style.display = 'none';
-      }
-    });
-
     // AUTH STATE LISTENER
     firebase.auth().onAuthStateChanged(function(user) {
       const signInBtn = document.getElementById('signInBtn');
@@ -1088,12 +1150,18 @@
         if (signInBtn) signInBtn.style.display = 'none';
         if (userMenu) userMenu.style.display = 'block';
         if (userAvatar) userAvatar.src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
-        if (userName) userName.textContent = user.displayName || 'User';
-        loadUserPreviousReports(user.uid);
+        if (userName) userName.textContent = user.displayName ? user.displayName.split(' ')[0] : 'User';
+        loadMyReports(user.uid);
       } else {
         if (signInBtn) signInBtn.style.display = 'block';
         if (userMenu) userMenu.style.display = 'none';
-        if (myReportsSec) myReportsSec.style.display = 'none';
+        if (myReportsSec) {
+          myReportsSec.style.display = 'block';
+          myReportsSec.innerHTML = `
+            <h3 style="font-size:20px; font-weight:700; margin-bottom:12px;">Your Previous Reports</h3>
+            <p style="font-size:14px; color:#666666;">Sign in with Google above to save and access your personalized settlement reports across devices.</p>
+          `;
+        }
       }
     });
 
@@ -1115,7 +1183,6 @@
       } catch (error) {
         console.error("Firebase Sign In Error:", error);
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-          console.log("Popup restricted, switching to redirect flow...");
           try {
             await auth.signInWithRedirect(googleProvider);
           } catch (redirectErr) {
@@ -1133,87 +1200,141 @@
         await auth.signOut();
         const dd = document.getElementById('dropdown');
         if (dd) dd.style.display = 'none';
-        const myReportsSec = document.getElementById('myReportsSection');
-        if (myReportsSec) myReportsSec.style.display = 'none';
         showToast("Signed out successfully.");
       } catch (error) {
         showToast(`Sign out error: ${error.message}`);
       }
     }
 
-    // LOAD PREVIOUS REPORTS FROM FIRESTORE
-    async function loadUserPreviousReports(uid) {
+    // LOAD MY REPORTS FROM FIRESTORE (COLLECTION: users/{uid}/reports)
+    async function loadMyReports(uid) {
       const sec = document.getElementById('myReportsSection');
+      if (!uid || !sec) return;
+
+      sec.style.display = 'block';
+      sec.innerHTML = `
+        <h3 style="font-size:20px; font-weight:700; margin-bottom:20px;">Your Previous Reports</h3>
+        <div id="previousReportsList" style="display:grid; gap:16px;">
+          <div style="font-size:14px; color:#666666; text-align:center; padding:16px;">Loading your saved reports...</div>
+        </div>
+      `;
+
       const list = document.getElementById('previousReportsList');
-      if (!uid || !sec || !list) return;
 
       try {
-        const snapshot = await db.collection("reports").doc(uid).collection("userReports")
+        const snapshot = await db.collection("users").doc(uid).collection("reports")
           .orderBy("timestamp", "desc")
-          .limit(5)
+          .limit(10)
           .get();
 
         if (snapshot.empty) {
-          sec.style.display = 'none';
-          list.innerHTML = '';
+          list.innerHTML = `<div style="font-size:14px; color:#666666; padding:12px;">No saved reports found. Complete an assessment above to auto-save reports!</div>`;
           return;
         }
 
-        sec.style.display = 'block';
         list.innerHTML = '';
 
         snapshot.forEach(doc => {
           const data = doc.data();
-          const firstCountry = data.fullResult && data.fullResult.countries && data.fullResult.countries[0] ? data.fullResult.countries[0] : null;
+          const docId = doc.id;
+          const firstCountry = data.fullResultJSON && data.fullResultJSON.countries && data.fullResultJSON.countries[0] ? data.fullResultJSON.countries[0] : null;
           const flag = firstCountry ? (firstCountry.flag || '🏳️') : '🌐';
           const countryName = data.topCountry || (firstCountry ? firstCountry.name : 'Report');
+          const score = data.matchScore || (firstCountry ? firstCountry.matchScore : 90);
           
           let dateStr = 'Recent';
           if (data.timestamp && data.timestamp.toDate) {
-            dateStr = data.timestamp.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const dt = data.timestamp.toDate();
+            dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           }
 
           const card = document.createElement('div');
-          card.style.cssText = 'background:#f9f9f9; border:1px solid #e5e5e5; border-radius:8px; padding:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:border-color 0.15s;';
-          card.onmouseover = () => card.style.borderColor = '#000000';
-          card.onmouseout = () => card.style.borderColor = '#e5e5e5';
-          card.onclick = () => {
-            if (data.fullResult) {
-              renderResults(data.fullResult, { nationality: data.nationality, profession: data.profession, budget: data.budget });
-              document.getElementById('result').style.display = 'block';
-              document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
-              showToast(`Loaded saved report for ${countryName}`);
-            }
-          };
+          card.id = `report-card-${docId}`;
+          card.style.cssText = 'background:#f9f9f9; border:1px solid #e5e5e5; border-radius:8px; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;';
 
           card.innerHTML = `
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="font-size:24px;">${flag}</span>
+              <span style="font-size:28px;">${flag}</span>
               <div>
-                <div style="font-size:16px; font-weight:700; color:#111111;">${countryName}</div>
-                <div style="font-size:13px; color:#666666;">${data.profession || 'Professional'} · $${data.budget || '0'}/mo · Passport: ${data.nationality || 'Global'}</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:16px; font-weight:700; color:#111111;">${countryName}</span>
+                  <span style="background:#000000; color:#ffffff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;">${score}/100</span>
+                </div>
+                <div style="font-size:13px; color:#666666;">${data.profession || 'Professional'} · Passport: ${data.nationality || 'Global'} · $${data.budget || '0'}/mo</div>
+                <div style="font-size:12px; color:#888888; margin-top:2px;">Generated on ${dateStr}</div>
               </div>
             </div>
-            <div style="font-size:13px; color:#888888; font-weight:500;">${dateStr} →</div>
+
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn-action-dark" style="padding:8px 14px; font-size:13px; flex:none;" onclick="viewSavedReport('${docId}')">View Report</button>
+              <button class="btn-action-outline" style="padding:8px 14px; font-size:13px; color:#b91c1c; border-color:#fca5a5; flex:none;" onclick="deleteSavedReport('${uid}', '${docId}')">Delete</button>
+            </div>
           `;
+          card.dataset.fullHtml = data.fullResultHTML || '';
+          if (data.fullResultJSON) {
+            card.dataset.fullJson = JSON.stringify(data.fullResultJSON);
+          }
+          if (data.allInputs) {
+            card.dataset.allInputs = JSON.stringify(data.allInputs);
+          }
           list.appendChild(card);
         });
 
       } catch (err) {
         console.error("Error loading previous reports from Firestore:", err);
+        list.innerHTML = `<div style="font-size:14px; color:#b91c1c;">Error loading saved reports: ${err.message}</div>`;
+      }
+    }
+
+    function viewSavedReport(docId) {
+      const card = document.getElementById(`report-card-${docId}`);
+      if (!card) return;
+
+      if (card.dataset.fullJson) {
+        try {
+          const parsedRes = JSON.parse(card.dataset.fullJson);
+          const parsedInputs = card.dataset.allInputs ? JSON.parse(card.dataset.allInputs) : {};
+          currentAIResult = parsedRes;
+          currentProfile = parsedInputs;
+          renderResults(parsedRes, parsedInputs);
+          document.getElementById('result').style.display = 'block';
+          document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+          showToast("Loaded saved report onto screen.");
+          return;
+        } catch (e) {}
+      }
+
+      if (card.dataset.fullHtml) {
+        document.getElementById('result').innerHTML = card.dataset.fullHtml;
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        showToast("Loaded saved report onto screen.");
+      }
+    }
+
+    async function deleteSavedReport(uid, docId) {
+      if (!confirm("Are you sure you want to delete this saved report?")) return;
+      try {
+        await db.collection("users").doc(uid).collection("reports").doc(docId).delete();
+        const card = document.getElementById(`report-card-${docId}`);
+        if (card) card.remove();
+        showToast("Report deleted.");
+      } catch (err) {
+        showToast("Delete error: " + err.message);
       }
     }
 
     function toggleNationalityDropdown() {
       const dropdown = document.getElementById('nationalityDropdown');
-      dropdown.classList.toggle('open');
-      if (dropdown.classList.contains('open')) {
+      if (dropdown) dropdown.classList.toggle('open');
+      if (dropdown && dropdown.classList.contains('open')) {
         document.getElementById('nationalitySearch').focus();
       }
     }
 
     function renderNationalityOptions(list) {
       const container = document.getElementById('countryListOptions');
+      if (!container) return;
       container.innerHTML = '';
       list.forEach(c => {
         const item = document.createElement('div');
@@ -1256,7 +1377,8 @@
         reason: document.getElementById('reason').value,
         priorities: document.getElementById('priorities').value,
         family: document.getElementById('family').value,
-        govtype: document.getElementById('govtype').value
+        govtype: document.getElementById('govtype').value,
+        additionalContext: document.getElementById('additionalContext').value.trim()
       };
 
       if (!profile.profession || !profile.budget) {
@@ -1279,28 +1401,33 @@
         if (!response.ok || data.error) throw new Error(data.error || 'Server error.');
 
         currentAIResult = data.result;
+        currentProfile = profile;
         try { localStorage.setItem('settleiq_last_report', JSON.stringify({ result: data.result, profile })); } catch (e) {}
 
         renderResults(data.result, profile);
         document.getElementById('result').style.display = 'block';
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
-        // SAVE REPORT TO FIRESTORE IF USER IS LOGGED IN
+        // AUTO-SAVE REPORT TO FIRESTORE: users/{uid}/reports/{timestamp}
         if (auth.currentUser) {
           const currentUser = auth.currentUser;
           const topCountryName = data.result.bestMatch || (data.result.countries && data.result.countries[0] ? data.result.countries[0].name : '');
-          
-          db.collection("reports").doc(currentUser.uid).collection("userReports").add({
+          const matchScoreVal = (data.result.countries && data.result.countries[0]) ? data.result.countries[0].matchScore : 95;
+
+          db.collection("users").doc(currentUser.uid).collection("reports").add({
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             nationality: profile.nationality,
             profession: profile.profession,
             budget: profile.budget,
             topCountry: topCountryName,
-            fullResult: data.result,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            matchScore: matchScoreVal,
+            fullResultHTML: document.getElementById('result').innerHTML,
+            allInputs: profile,
+            fullResultJSON: data.result
           }).then(() => {
-            loadUserPreviousReports(currentUser.uid);
+            loadMyReports(currentUser.uid);
           }).catch(err => {
-            console.error("Firestore save error:", err);
+            console.error("Firestore auto-save error:", err);
           });
         }
 
@@ -1319,11 +1446,23 @@
           const parsed = JSON.parse(cached);
           if (parsed && parsed.result) {
             currentAIResult = parsed.result;
+            currentProfile = parsed.profile || {};
             renderResults(parsed.result, parsed.profile || {});
             document.getElementById('result').style.display = 'block';
           }
         }
       } catch (e) {}
+    }
+
+    // SANITIZATION HELPER FOR PDF & EMOJI STRIPPING
+    function cleanText(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/[\u{1F300}-\u{1FFFF}]/gu, '')
+        .replace(/[\u{2600}-\u{26FF}]/gu, '')
+        .replace(/[\u{2700}-\u{27BF}]/gu, '')
+        .replace(/[^\x00-\x7F]/g, '')
+        .trim();
     }
 
     // RENDER RESULTS IN CLEAN KREA STYLE
@@ -1353,7 +1492,7 @@
 
         card.innerHTML = `
           <div class="country-header">
-            <div class="country-flag">${country.flag || '🏳️'}</div>
+            <div class="country-flag">${country.flag || '🌐'}</div>
             <div>
               <div class="country-name">${country.name}</div>
               <div style="font-size: 14px; color: #666666;">Visa Pathway: ${country.visaPathway || 'Skilled Work Visa'}</div>
@@ -1375,7 +1514,23 @@
             <span class="data-value">${salary.netTakeHome || 'N/A'}</span>
           </div>
           <div class="data-row">
-            <span class="data-label">Est. Monthly Cost of Living</span>
+            <span class="data-label">Rent Expenses</span>
+            <span class="data-value">${cost.rent || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Groceries Expenses</span>
+            <span class="data-value">${cost.groceries || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Transport Expenses</span>
+            <span class="data-value">${cost.transport || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Utilities Expenses</span>
+            <span class="data-value">${cost.utilities || 'N/A'}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Total Monthly Cost of Living</span>
             <span class="data-value">${cost.total || 'N/A'}</span>
           </div>
           <div class="data-row">
@@ -1383,7 +1538,7 @@
             <span class="data-value" style="color:#16a34a;">${country.monthlySavings || 'N/A'}</span>
           </div>
           <div class="data-row">
-            <span class="data-label">PR Timeline</span>
+            <span class="data-label">PR Timeline & Route</span>
             <span class="data-value">${country.prTimeline || 'N/A'}</span>
           </div>
           <div class="data-row">
@@ -1403,6 +1558,14 @@
             <span class="data-value">${country.relocationCost || 'N/A'}</span>
           </div>
 
+          <!-- Top Hiring Companies -->
+          ${country.hiringCompanies && country.hiringCompanies.length ? `
+            <div style="margin-top: 20px; padding: 14px; background: #f9f9f9; border-radius: 8px; border: 1px solid #e5e5e5;">
+              <div style="font-size: 13px; font-weight: 700; color: #111111; margin-bottom: 6px;">Top Companies Hiring ${profile.profession || 'Professionals'}:</div>
+              <div style="font-size: 14px; color: #333333;">${country.hiringCompanies.join(' · ')}</div>
+            </div>
+          ` : ''}
+
           <!-- Collapsible 24 Topics Accordion -->
           <div class="topics-container">
             ${renderTopicToggle(idx, "1", "Job Market & Demand", country.jobMarket)}
@@ -1415,10 +1578,11 @@
             ${renderTopicToggle(idx, "8", "Expat Community & Culture", country.homeCommunity)}
             ${renderTopicToggle(idx, "9", "Taxes, Transport & Pension", `Taxes: ${country.taxes || ''} <br>Transport: ${country.transport || ''} <br>Pension: ${country.retirement || ''}`)}
             ${renderTopicToggle(idx, "10", "Political Stability & War Risk", `Stability: ${country.politicalStability || ''} <br>War Risk: ${country.warRisk || 'Low'}`)}
+            ${renderTopicToggle(idx, "11", "Personalized Fit Reason", country.personalizedReason)}
           </div>
 
-          <!-- Pros and Cons Bullets -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 24px;">
+          <!-- Pros, Cons & Red Flags Bullets -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 24px;">
             <div class="bullet-section">
               <div class="bullet-title" style="color: #16a34a;">Key Advantages</div>
               <ul class="bullet-list pros-list">
@@ -1431,6 +1595,12 @@
                 ${(country.cons || ['High cost of living']).map(c => `<li>${c}</li>`).join('')}
               </ul>
             </div>
+            <div class="bullet-section">
+              <div class="bullet-title" style="color: #dc2626;">Red Flags & Risks</div>
+              <ul class="bullet-list flags-list">
+                ${(country.redFlags || ['Competitive job market', 'Housing shortage']).map(rf => `<li>${rf}</li>`).join('')}
+              </ul>
+            </div>
           </div>
         `;
 
@@ -1441,8 +1611,23 @@
       // Comparison Table
       renderComparisonTable(res.comparisonTable);
 
-      // Final Verdict Card
-      if (res.finalVerdict) {
+      // Ranked Verdict Box
+      if (res.rankedVerdict) {
+        let rvHtml = `<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin-bottom:20px;">`;
+        if (res.rankedVerdict.bestForIncome) {
+          rvHtml += `<div style="background:#f9f9f9; padding:12px; border-radius:8px; border:1px solid #e5e5e5;"><strong style="color:#16a34a;">Best for Income:</strong><br>${res.rankedVerdict.bestForIncome}</div>`;
+        }
+        if (res.rankedVerdict.bestForLifestyle) {
+          rvHtml += `<div style="background:#f9f9f9; padding:12px; border-radius:8px; border:1px solid #e5e5e5;"><strong style="color:#0284c7;">Best for Lifestyle:</strong><br>${res.rankedVerdict.bestForLifestyle}</div>`;
+        }
+        if (res.rankedVerdict.bestForFastestPR) {
+          rvHtml += `<div style="background:#f9f9f9; padding:12px; border-radius:8px; border:1px solid #e5e5e5;"><strong style="color:#d97706;">Best for Fastest PR:</strong><br>${res.rankedVerdict.bestForFastestPR}</div>`;
+        }
+        rvHtml += `</div>`;
+        
+        document.getElementById('verdictText').innerHTML = rvHtml + (res.finalVerdict ? marked.parse(res.finalVerdict) : '');
+        document.getElementById('verdictBox').style.display = 'block';
+      } else if (res.finalVerdict) {
         document.getElementById('verdictText').innerHTML = marked.parse(res.finalVerdict);
         document.getElementById('verdictBox').style.display = 'block';
       }
@@ -1491,7 +1676,7 @@
       table.innerHTML = html;
     }
 
-    // TEXT-BASED PDF GENERATION FUNCTION (COMPACT & CLEAN ALIGNMENT)
+    // COMPLETE TEXT-BASED jsPDF REWRITE (ZERO CANVAS, SUB-300KB FILE SIZE)
     async function downloadPDF() {
       const btn = document.getElementById('downloadBtn');
       btn.textContent = 'Generating PDF...';
@@ -1502,42 +1687,193 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         
         const pageWidth = 210;
+        const pageHeight = 297;
         const margin = 15;
         const maxWidth = pageWidth - (margin * 2);
         let y = 20;
 
-        function addText(text, fontSize, isBold) {
-          doc.setFontSize(fontSize || 11);
-          doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-          const lines = doc.splitTextToSize(String(text), maxWidth);
+        function checkPageBreak(neededHeight) {
+          if (y + neededHeight > 275) {
+            doc.addPage();
+            y = 20;
+          }
+        }
+
+        function addHeading(text) {
+          const clean = cleanText(text);
+          if (!clean) return;
+          checkPageBreak(12);
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0, 0, 0);
+          doc.text(clean, margin, y);
+          y += 8;
+        }
+
+        function addSubHeading(text) {
+          const clean = cleanText(text);
+          if (!clean) return;
+          checkPageBreak(10);
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text(clean, margin, y);
+          y += 6;
+        }
+
+        function addParagraph(text) {
+          const clean = cleanText(text);
+          if (!clean) return;
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(30, 30, 30);
+          const lines = doc.splitTextToSize(clean, maxWidth);
           lines.forEach(line => {
-            if (y > 270) { doc.addPage(); y = 20; }
+            checkPageBreak(5);
             doc.text(line, margin, y);
-            y += (fontSize || 11) * 0.5;
+            y += 4.5;
           });
           y += 3;
         }
 
-        addText('SettleIQ — AI Immigration Report', 18, true);
-        addText('Generated on ' + new Date().toLocaleDateString(), 10, false);
-        y += 5;
+        function addDataRow(label, value) {
+          const cleanL = cleanText(label);
+          const cleanV = cleanText(value);
+          if (!cleanL) return;
+          checkPageBreak(6);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(80, 80, 80);
+          doc.text(cleanL + ':', margin, y);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(10, 10, 10);
+          doc.text(cleanV || 'N/A', margin + 65, y);
+          y += 5;
+        }
 
-        const resultDiv = document.getElementById('result');
-        if (resultDiv) {
-          const text = resultDiv.innerText || resultDiv.textContent;
-          const sections = text.split('\n').filter(line => line.trim());
-          sections.forEach(section => {
-            const trimmed = section.trim();
-            if (!trimmed) return;
-            if (trimmed.length < 60 && (trimmed.endsWith(':') || trimmed.match(/^\d+\.|^[A-Z]/))) {
-              addText(trimmed, 13, true);
-            } else {
-              addText(trimmed, 10, false);
+        // 1. COVER PAGE / HEADER
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, 0, pageWidth, 40, 'F');
+        
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('SettleIQ', margin, 22);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Global AI Settlement & Relocation Assessment', margin, 30);
+
+        y = 52;
+        addHeading('Report Overview');
+        addDataRow('Applicant Passport', currentProfile.nationality || 'Global');
+        addDataRow('Profession', currentProfile.profession || 'Professional');
+        addDataRow('Monthly Budget', '$' + (currentProfile.budget || '0') + ' USD');
+        addDataRow('Date Generated', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+        if (currentProfile.additionalContext) {
+          addDataRow('Personal Preferences', currentProfile.additionalContext);
+        }
+        y += 6;
+
+        if (currentAIResult && currentAIResult.summary) {
+          addHeading('Executive Summary');
+          addParagraph(currentAIResult.summary);
+          y += 6;
+        }
+
+        // 2. DETAILED COUNTRY SECTIONS
+        if (currentAIResult && currentAIResult.countries) {
+          currentAIResult.countries.forEach((country, cIdx) => {
+            checkPageBreak(40);
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 8;
+
+            addHeading(`Option ${cIdx + 1}: ${country.name} (Match Score: ${country.matchScore || 90}/100)`);
+            addDataRow('Visa Pathway', country.visaPathway);
+            addDataRow('Gross Monthly Salary', country.salary ? country.salary.gross : 'N/A');
+            addDataRow('Income Tax Rate', country.salary ? country.salary.taxRate : 'N/A');
+            addDataRow('Net Take-Home Salary', country.salary ? country.salary.netTakeHome : 'N/A');
+            addDataRow('Monthly Cost of Living', country.costOfLiving ? country.costOfLiving.total : 'N/A');
+            addDataRow('Monthly Net Savings', country.monthlySavings);
+            addDataRow('PR Timeline & Route', country.prTimeline);
+            addDataRow('Citizenship Timeline', country.citizenshipTimeline);
+            addDataRow('Dual Citizenship', country.dualCitizenship);
+            addDataRow('GPI 2026 Safety Ranking', country.safety ? country.safety.gpiRanking : 'N/A');
+            addDataRow('Est. Relocation Cost', country.relocationCost);
+
+            if (country.hiringCompanies && country.hiringCompanies.length) {
+              addDataRow('Top Hiring Companies', country.hiringCompanies.join(', '));
             }
+
+            y += 4;
+            if (country.jobMarket) {
+              addSubHeading('Job Market & Demand');
+              addParagraph(country.jobMarket);
+            }
+            if (country.visaProcess) {
+              addSubHeading('Visa Process & Requirements');
+              addParagraph(country.visaProcess);
+            }
+            if (country.healthcare) {
+              addSubHeading('Healthcare System');
+              addParagraph(country.healthcare);
+            }
+            if (country.personalizedReason) {
+              addSubHeading('Personalized Profile Fit');
+              addParagraph(country.personalizedReason);
+            }
+
+            if (country.pros && country.pros.length) {
+              addSubHeading('Key Advantages');
+              addParagraph(country.pros.join('; '));
+            }
+            if (country.cons && country.cons.length) {
+              addSubHeading('Considerations & Limitations');
+              addParagraph(country.cons.join('; '));
+            }
+            if (country.redFlags && country.redFlags.length) {
+              addSubHeading('Red Flags & Risks');
+              addParagraph(country.redFlags.join('; '));
+            }
+
+            y += 6;
           });
         }
 
+        // 3. RANKED VERDICT & FINAL RECOMMENDATION
+        if (currentAIResult && currentAIResult.rankedVerdict) {
+          addHeading('Ranked Verdict');
+          if (currentAIResult.rankedVerdict.bestForIncome) addDataRow('Best for Income', currentAIResult.rankedVerdict.bestForIncome);
+          if (currentAIResult.rankedVerdict.bestForLifestyle) addDataRow('Best for Lifestyle', currentAIResult.rankedVerdict.bestForLifestyle);
+          if (currentAIResult.rankedVerdict.bestForFastestPR) addDataRow('Best for Fastest PR', currentAIResult.rankedVerdict.bestForFastestPR);
+          y += 6;
+        }
+
+        if (currentAIResult && currentAIResult.finalVerdict) {
+          addHeading('Final Executive Verdict');
+          addParagraph(currentAIResult.finalVerdict);
+        }
+
+        // 4. ADD PAGE HEADERS & FOOTERS TO ALL PAGES
+        const totalPages = doc.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          doc.setPage(i);
+          if (i > 1) {
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(120, 120, 120);
+            doc.text('SettleIQ — Global Settlement Assessment', margin, 12);
+            doc.line(margin, 14, pageWidth - margin, 14);
+          }
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(120, 120, 120);
+          doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 20, pageHeight - 10);
+        }
+
         doc.save('SettleIQ_Report.pdf');
+        showToast("PDF report downloaded cleanly!");
       } catch (err) {
         alert('PDF error: ' + err.message);
       }
@@ -1559,6 +1895,7 @@
       selectNationality({ name: "India", flag: "🇮🇳" });
       document.getElementById('result').style.display = 'none';
       currentAIResult = null;
+      currentProfile = {};
       try { localStorage.removeItem('settleiq_last_report'); } catch (e) {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       showToast("Form reset.");
