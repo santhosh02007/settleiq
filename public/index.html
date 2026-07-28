@@ -16,10 +16,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-  <!-- PDF & HTML Libraries -->
+  <!-- PDF & Markdown Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     /* ==========================================================================
@@ -89,21 +88,6 @@
       display: flex;
       align-items: center;
       gap: 16px;
-    }
-    .btn-nav-solid {
-      background: #ffffff;
-      color: #000000;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 6px;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: background 0.15s ease;
-    }
-    .btn-nav-solid:hover {
-      background: #e5e5e5;
     }
 
     /* HERO SECTION */
@@ -608,8 +592,39 @@
   <!-- NAVBAR -->
   <nav>
     <a href="#" class="nav-logo">SettleIQ</a>
-    <div class="nav-actions" id="navAuthActions">
-      <button class="btn-nav-solid" onclick="signInWithGoogle()">Sign in with Google</button>
+    
+    <!-- NAVBAR AUTH UI CONTAINER -->
+    <div id="authContainer">
+      <button id="signInBtn" onclick="signInWithGoogle()" 
+        style="background:#ffffff;color:#000000;border:none;padding:10px 20px;
+        border-radius:6px;cursor:pointer;font-family:Inter,sans-serif;
+        font-size:14px;font-weight:600;">
+        Sign in with Google
+      </button>
+      <div id="userMenu" style="display:none;position:relative;">
+        <div onclick="toggleDropdown()" 
+          style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <img id="userAvatar" src="" alt="" 
+            style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+          <span id="userName" 
+            style="font-size:14px;font-weight:600;color:#ffffff;"></span>
+          <span style="font-size:10px;color:#888;">▼</span>
+        </div>
+        <div id="dropdown" 
+          style="display:none;position:absolute;right:0;top:48px;
+          background:#ffffff;border:1px solid #e5e5e5;border-radius:8px;
+          min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:1000;">
+          <div onclick="showMyReports()" 
+            style="padding:12px 16px;cursor:pointer;font-size:14px;color:#111111;
+            border-bottom:1px solid #f0f0f0;">
+            📋 My Reports
+          </div>
+          <div onclick="signOutUser()" 
+            style="padding:12px 16px;cursor:pointer;font-size:14px;color:#e53e3e;">
+            Sign Out
+          </div>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -1036,35 +1051,53 @@
       });
     });
 
-    // AUTH STATE LISTENER (PERSISTS ACROSS REFRESH)
-    auth.onAuthStateChanged((user) => {
-      const navActions = document.getElementById('navAuthActions');
-      const myReportsSec = document.getElementById('myReportsSection');
+    // NAV DROPDOWN TOGGLES
+    function toggleDropdown() {
+      const dd = document.getElementById('dropdown');
+      if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+    }
 
-      if (user) {
-        if (navActions) {
-          navActions.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px;">
-              <img src="${user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #333333;" alt="${user.displayName || 'User'}" />
-              <span style="color:#ffffff; font-size:14px; font-weight:600;">${user.displayName || user.email}</span>
-              <button onclick="signOutUser()" style="background:none; border:none; color:#888888; font-size:14px; font-weight:500; cursor:pointer;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#888888'">Sign out</button>
-            </div>
-          `;
-        }
-        loadUserPreviousReports(user.uid);
-      } else {
-        if (navActions) {
-          navActions.innerHTML = `
-            <button class="btn-nav-solid" onclick="signInWithGoogle()">Sign in with Google</button>
-          `;
-        }
-        if (myReportsSec) {
-          myReportsSec.style.display = 'none';
-        }
+    function showMyReports() {
+      const dd = document.getElementById('dropdown');
+      if (dd) dd.style.display = 'none';
+      const sec = document.getElementById('myReportsSection');
+      if (sec) {
+        sec.style.display = 'block';
+        sec.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      const userMenu = document.getElementById('userMenu');
+      if (userMenu && !userMenu.contains(e.target)) {
+        const dd = document.getElementById('dropdown');
+        if (dd) dd.style.display = 'none';
       }
     });
 
-    // COMPLETE WORKING GOOGLE SIGN IN (POPUP + REDIRECT FALLBACK)
+    // AUTH STATE LISTENER
+    firebase.auth().onAuthStateChanged(function(user) {
+      const signInBtn = document.getElementById('signInBtn');
+      const userMenu = document.getElementById('userMenu');
+      const userAvatar = document.getElementById('userAvatar');
+      const userName = document.getElementById('userName');
+      const myReportsSec = document.getElementById('myReportsSection');
+
+      if (user) {
+        if (signInBtn) signInBtn.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'block';
+        if (userAvatar) userAvatar.src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+        if (userName) userName.textContent = user.displayName || 'User';
+        loadUserPreviousReports(user.uid);
+      } else {
+        if (signInBtn) signInBtn.style.display = 'block';
+        if (userMenu) userMenu.style.display = 'none';
+        if (myReportsSec) myReportsSec.style.display = 'none';
+      }
+    });
+
+    // GOOGLE SIGN IN
     async function signInWithGoogle() {
       try {
         const result = await auth.signInWithPopup(googleProvider);
@@ -1081,7 +1114,6 @@
         }
       } catch (error) {
         console.error("Firebase Sign In Error:", error);
-        // Fallback to redirect if popup is blocked or closed by cross-origin restrictions
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
           console.log("Popup restricted, switching to redirect flow...");
           try {
@@ -1099,6 +1131,8 @@
     async function signOutUser() {
       try {
         await auth.signOut();
+        const dd = document.getElementById('dropdown');
+        if (dd) dd.style.display = 'none';
         const myReportsSec = document.getElementById('myReportsSection');
         if (myReportsSec) myReportsSec.style.display = 'none';
         showToast("Signed out successfully.");
@@ -1457,50 +1491,57 @@
       table.innerHTML = html;
     }
 
-    // EXACT WORKING PDF GENERATION FUNCTION
+    // TEXT-BASED PDF GENERATION FUNCTION (COMPACT & CLEAN ALIGNMENT)
     async function downloadPDF() {
-      const resultDiv = document.getElementById('result');
-      if (!resultDiv) return;
-      
       const btn = document.getElementById('downloadBtn');
       btn.textContent = 'Generating PDF...';
       btn.disabled = true;
-      
+
       try {
-        const canvas = await html2canvas(resultDiv, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          windowWidth: resultDiv.scrollWidth,
-          windowHeight: resultDiv.scrollHeight
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        const doc = new jsPDF('p', 'mm', 'a4');
         
-        const imgWidth = 210;
-        const pageHeight = 297;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
-        
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
+        const pageWidth = 210;
+        const margin = 15;
+        const maxWidth = pageWidth - (margin * 2);
+        let y = 20;
+
+        function addText(text, fontSize, isBold) {
+          doc.setFontSize(fontSize || 11);
+          doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+          const lines = doc.splitTextToSize(String(text), maxWidth);
+          lines.forEach(line => {
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(line, margin, y);
+            y += (fontSize || 11) * 0.5;
+          });
+          y += 3;
         }
-        
-        pdf.save('SettleIQ_Report.pdf');
+
+        addText('SettleIQ — AI Immigration Report', 18, true);
+        addText('Generated on ' + new Date().toLocaleDateString(), 10, false);
+        y += 5;
+
+        const resultDiv = document.getElementById('result');
+        if (resultDiv) {
+          const text = resultDiv.innerText || resultDiv.textContent;
+          const sections = text.split('\n').filter(line => line.trim());
+          sections.forEach(section => {
+            const trimmed = section.trim();
+            if (!trimmed) return;
+            if (trimmed.length < 60 && (trimmed.endsWith(':') || trimmed.match(/^\d+\.|^[A-Z]/))) {
+              addText(trimmed, 13, true);
+            } else {
+              addText(trimmed, 10, false);
+            }
+          });
+        }
+
+        doc.save('SettleIQ_Report.pdf');
       } catch (err) {
-        alert('PDF generation failed: ' + err.message);
+        alert('PDF error: ' + err.message);
       }
-      
+
       btn.textContent = 'Download PDF Report';
       btn.disabled = false;
     }
