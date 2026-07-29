@@ -12,6 +12,7 @@ dotenv.config();
 console.log('API Key loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // 1. Body parser MUST be the very first middleware
 app.use(express.json({ limit: '1mb' }));
