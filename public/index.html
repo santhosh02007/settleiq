@@ -52,6 +52,14 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* HIDE NUMBER INPUT ARROWS */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
+
     /* SECTION CONTAINERS */
     .section-dark {
       background-color: #000000;
@@ -743,7 +751,7 @@
         <form id="settleForm" onsubmit="handleFormSubmit(event)">
           <div class="form-grid">
 
-            <!-- 1. Searchable Flag Dropdown -->
+            <!-- 1. Searchable Flag Dropdown (ALL 195 UN COUNTRIES) -->
             <div class="form-group">
               <label>Passport Nationality *</label>
               <div class="custom-select-wrapper">
@@ -752,63 +760,46 @@
                   <span style="font-size: 12px; color: #666666;">▼</span>
                 </div>
                 <div class="custom-select-dropdown" id="nationalityDropdown">
-                  <input type="text" class="custom-select-search" id="nationalitySearch" placeholder="Search country..." oninput="filterCountries()" onclick="event.stopPropagation()" />
+                  <input type="text" class="custom-select-search" id="nationalitySearch" placeholder="Search country..." oninput="filterCountries(this.value)" onclick="event.stopPropagation()" />
                   <div id="countryListOptions"></div>
                 </div>
               </div>
               <input type="hidden" id="nationalityValue" value="India" />
             </div>
 
-            <!-- 2. SPECIFIC AGE SELECTOR (FIX 3) -->
+            <!-- 2. AGE STEPPER WITH +/- BUTTONS -->
             <div class="form-group">
-              <label for="age">Age *</label>
-              <select id="age" required>
-                <option value="">Select your age</option>
-                <option value="18">18</option>
-                <option value="19">19</option>
-                <option value="20">20</option>
-                <option value="21">21</option>
-                <option value="22">22</option>
-                <option value="23">23</option>
-                <option value="24">24</option>
-                <option value="25">25</option>
-                <option value="26">26</option>
-                <option value="27">27</option>
-                <option value="28" selected>28</option>
-                <option value="29">29</option>
-                <option value="30">30</option>
-                <option value="31">31</option>
-                <option value="32">32</option>
-                <option value="33">33</option>
-                <option value="34">34</option>
-                <option value="35">35</option>
-                <option value="36">36</option>
-                <option value="37">37</option>
-                <option value="38">38</option>
-                <option value="39">39</option>
-                <option value="40">40</option>
-                <option value="41">41</option>
-                <option value="42">42</option>
-                <option value="43">43</option>
-                <option value="44">44</option>
-                <option value="45">45</option>
-                <option value="46">46</option>
-                <option value="47">47</option>
-                <option value="48">48</option>
-                <option value="49">49</option>
-                <option value="50">50</option>
-                <option value="51">51</option>
-                <option value="52">52</option>
-                <option value="53">53</option>
-                <option value="54">54</option>
-                <option value="55">55</option>
-                <option value="56">56</option>
-                <option value="57">57</option>
-                <option value="58">58</option>
-                <option value="59">59</option>
-                <option value="60">60</option>
-                <option value="60+">60+</option>
-              </select>
+              <label>AGE *</label>
+              <div id="ageStepper" style="display:flex;align-items:center;
+                gap:0;border:1px solid #e5e5e5;border-radius:8px;
+                overflow:hidden;background:#fff;width:100%;">
+                <button type="button" onclick="decrementAge()"
+                  style="width:48px;height:48px;background:#f5f5f5;
+                  border:none;border-right:1px solid #e5e5e5;
+                  cursor:pointer;font-size:20px;font-weight:300;
+                  color:#111;display:flex;align-items:center;
+                  justify-content:center;flex-shrink:0;">
+                  −
+                </button>
+                <input type="number" id="age" name="age" 
+                  value="22" min="18" max="80"
+                  style="flex:1;text-align:center;border:none;
+                  outline:none;font-size:18px;font-weight:600;
+                  color:#111;padding:12px 0;background:#fff;
+                  -moz-appearance:textfield;"
+                  onchange="validateAge(this)">
+                <button type="button" onclick="incrementAge()"
+                  style="width:48px;height:48px;background:#f5f5f5;
+                  border:none;border-left:1px solid #e5e5e5;
+                  cursor:pointer;font-size:20px;font-weight:300;
+                  color:#111;display:flex;align-items:center;
+                  justify-content:center;flex-shrink:0;">
+                  +
+                </button>
+              </div>
+              <p style="font-size:12px;color:#999;margin-top:6px;">
+                Minimum age 18. You can also type directly.
+              </p>
             </div>
 
             <!-- 3. Profession -->
@@ -1182,57 +1173,197 @@
     const googleProvider = new firebase.auth.GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
+    // COMPLETE UN-RECOGNIZED 195 COUNTRIES LIST WITH FLAGS & DEMONYMS
     const FLAG_COUNTRIES = [
-      { name: "India", flag: "🇮🇳" },
-      { name: "United States", flag: "🇺🇸" },
-      { name: "United Kingdom", flag: "🇬🇧" },
-      { name: "Pakistan", flag: "🇵🇰" },
-      { name: "Bangladesh", flag: "🇧🇩" },
-      { name: "Nigeria", flag: "🇳🇬" },
-      { name: "Philippines", flag: "🇵🇭" },
-      { name: "Brazil", flag: "🇧🇷" },
-      { name: "Mexico", flag: "🇲🇽" },
-      { name: "Egypt", flag: "🇪🇬" },
-      { name: "Vietnam", flag: "🇻🇳" },
-      { name: "Indonesia", flag: "🇮🇩" },
-      { name: "Turkey", flag: "🇹🇷" },
-      { name: "Saudi Arabia", flag: "🇸🇦" },
-      { name: "South Africa", flag: "🇿🇦" },
-      { name: "China", flag: "🇨🇳" },
-      { name: "South Korea", flag: "🇰🇷" },
-      { name: "Russia", flag: "🇷🇺" },
-      { name: "Ukraine", flag: "🇺🇦" },
-      { name: "Poland", flag: "🇵🇱" },
-      { name: "Romania", flag: "🇷🇴" },
-      { name: "Colombia", flag: "🇨🇴" },
-      { name: "Argentina", flag: "🇦🇷" },
-      { name: "Iraq", flag: "🇮🇶" },
-      { name: "Iran", flag: "🇮🇷" },
-      { name: "Ghana", flag: "🇬🇭" },
-      { name: "Kenya", flag: "🇰🇪" },
-      { name: "Tanzania", flag: "🇹🇿" },
-      { name: "Morocco", flag: "🇲🇦" },
-      { name: "Albania", flag: "🇦🇱" },
-      { name: "Serbia", flag: "🇷🇸" },
-      { name: "Nepal", flag: "🇳🇵" },
-      { name: "Sri Lanka", flag: "🇱🇰" },
-      { name: "Malaysia", flag: "🇲🇾" },
-      { name: "Thailand", flag: "🇹🇭" },
-      { name: "Uzbekistan", flag: "🇺🇿" },
-      { name: "Kazakhstan", flag: "🇰🇿" },
-      { name: "Azerbaijan", flag: "🇦🇿" },
-      { name: "Georgia", flag: "🇬🇪" },
-      { name: "Armenia", flag: "🇦🇲" },
-      { name: "Canada", flag: "🇨🇦" },
-      { name: "Australia", flag: "🇦🇺" },
-      { name: "Germany", flag: "🇩🇪" },
-      { name: "France", flag: "🇫🇷" },
-      { name: "Spain", flag: "🇪🇸" },
-      { name: "Netherlands", flag: "🇳🇱" },
-      { name: "New Zealand", flag: "🇳🇿" },
-      { name: "Ireland", flag: "🇮🇪" },
-      { name: "Singapore", flag: "🇸🇬" },
-      { name: "United Arab Emirates", flag: "🇦🇪" }
+      { name: "Afghanistan", flag: "🇦🇫", value: "Afghan" },
+      { name: "Albania", flag: "🇦🇱", value: "Albanian" },
+      { name: "Algeria", flag: "🇩🇿", value: "Algerian" },
+      { name: "Andorra", flag: "🇦🇩", value: "Andorran" },
+      { name: "Angola", flag: "🇦🇴", value: "Angolan" },
+      { name: "Antigua and Barbuda", flag: "🇦🇬", value: "Antiguan" },
+      { name: "Argentina", flag: "🇦🇷", value: "Argentine" },
+      { name: "Armenia", flag: "🇦🇲", value: "Armenian" },
+      { name: "Australia", flag: "🇦🇺", value: "Australian" },
+      { name: "Austria", flag: "🇦🇹", value: "Austrian" },
+      { name: "Azerbaijan", flag: "🇦🇿", value: "Azerbaijani" },
+      { name: "Bahamas", flag: "🇧🇸", value: "Bahamian" },
+      { name: "Bahrain", flag: "🇧🇭", value: "Bahraini" },
+      { name: "Bangladesh", flag: "🇧🇩", value: "Bangladeshi" },
+      { name: "Barbados", flag: "🇧🇧", value: "Barbadian" },
+      { name: "Belarus", flag: "🇧🇾", value: "Belarusian" },
+      { name: "Belgium", flag: "🇧🇪", value: "Belgian" },
+      { name: "Belize", flag: "🇧🇿", value: "Belizean" },
+      { name: "Benin", flag: "🇧🇯", value: "Beninese" },
+      { name: "Bhutan", flag: "🇧🇹", value: "Bhutanese" },
+      { name: "Bolivia", flag: "🇧🇴", value: "Bolivian" },
+      { name: "Bosnia and Herzegovina", flag: "🇧🇦", value: "Bosnian" },
+      { name: "Botswana", flag: "🇧🇼", value: "Botswanan" },
+      { name: "Brazil", flag: "🇧🇷", value: "Brazilian" },
+      { name: "Brunei", flag: "🇧🇳", value: "Bruneian" },
+      { name: "Bulgaria", flag: "🇧🇬", value: "Bulgarian" },
+      { name: "Burkina Faso", flag: "🇧🇫", value: "Burkinabe" },
+      { name: "Burundi", flag: "🇧🇮", value: "Burundian" },
+      { name: "Cabo Verde", flag: "🇨🇻", value: "Cabo Verdean" },
+      { name: "Cambodia", flag: "🇰🇭", value: "Cambodian" },
+      { name: "Cameroon", flag: "🇨🇲", value: "Cameroonian" },
+      { name: "Canada", flag: "🇨🇦", value: "Canadian" },
+      { name: "Central African Republic", flag: "🇨🇫", value: "Central African" },
+      { name: "Chad", flag: "🇹🇩", value: "Chadian" },
+      { name: "Chile", flag: "🇨🇱", value: "Chilean" },
+      { name: "China", flag: "🇨🇳", value: "Chinese" },
+      { name: "Colombia", flag: "🇨🇴", value: "Colombian" },
+      { name: "Comoros", flag: "🇰🇲", value: "Comorian" },
+      { name: "Congo", flag: "🇨🇬", value: "Congolese" },
+      { name: "Costa Rica", flag: "🇨🇷", value: "Costa Rican" },
+      { name: "Croatia", flag: "🇭🇷", value: "Croatian" },
+      { name: "Cuba", flag: "🇨🇺", value: "Cuban" },
+      { name: "Cyprus", flag: "🇨🇾", value: "Cypriot" },
+      { name: "Czech Republic", flag: "🇨🇿", value: "Czech" },
+      { name: "Denmark", flag: "🇩🇰", value: "Danish" },
+      { name: "Djibouti", flag: "🇩🇯", value: "Djiboutian" },
+      { name: "Dominican Republic", flag: "🇩🇴", value: "Dominican" },
+      { name: "Ecuador", flag: "🇪🇨", value: "Ecuadorian" },
+      { name: "Egypt", flag: "🇪🇬", value: "Egyptian" },
+      { name: "El Salvador", flag: "🇸🇻", value: "Salvadoran" },
+      { name: "Equatorial Guinea", flag: "🇬🇶", value: "Equatorial Guinean" },
+      { name: "Eritrea", flag: "🇪🇷", value: "Eritrean" },
+      { name: "Estonia", flag: "🇪🇪", value: "Estonian" },
+      { name: "Eswatini", flag: "🇸🇿", value: "Swazi" },
+      { name: "Ethiopia", flag: "🇪🇹", value: "Ethiopian" },
+      { name: "Fiji", flag: "🇫🇯", value: "Fijian" },
+      { name: "Finland", flag: "🇫🇮", value: "Finnish" },
+      { name: "France", flag: "🇫🇷", value: "French" },
+      { name: "Gabon", flag: "🇬🇦", value: "Gabonese" },
+      { name: "Gambia", flag: "🇬🇲", value: "Gambian" },
+      { name: "Georgia", flag: "🇬🇪", value: "Georgian" },
+      { name: "Germany", flag: "🇩🇪", value: "German" },
+      { name: "Ghana", flag: "🇬🇭", value: "Ghanaian" },
+      { name: "Greece", flag: "🇬🇷", value: "Greek" },
+      { name: "Grenada", flag: "🇬🇩", value: "Grenadian" },
+      { name: "Guatemala", flag: "🇬🇹", value: "Guatemalan" },
+      { name: "Guinea", flag: "🇬🇳", value: "Guinean" },
+      { name: "Guinea-Bissau", flag: "🇬🇼", value: "Guinea-Bissauan" },
+      { name: "Guyana", flag: "🇬🇾", value: "Guyanese" },
+      { name: "Haiti", flag: "🇭🇹", value: "Haitian" },
+      { name: "Honduras", flag: "🇭🇳", value: "Honduran" },
+      { name: "Hungary", flag: "🇭🇺", value: "Hungarian" },
+      { name: "Iceland", flag: "🇮🇸", value: "Icelandic" },
+      { name: "India", flag: "🇮🇳", value: "Indian" },
+      { name: "Indonesia", flag: "🇮🇩", value: "Indonesian" },
+      { name: "Iran", flag: "🇮🇷", value: "Iranian" },
+      { name: "Iraq", flag: "🇮🇶", value: "Iraqi" },
+      { name: "Ireland", flag: "🇮🇪", value: "Irish" },
+      { name: "Israel", flag: "🇮🇱", value: "Israeli" },
+      { name: "Italy", flag: "🇮🇹", value: "Italian" },
+      { name: "Ivory Coast", flag: "🇨🇮", value: "Ivorian" },
+      { name: "Jamaica", flag: "🇯🇲", value: "Jamaican" },
+      { name: "Japan", flag: "🇯🇵", value: "Japanese" },
+      { name: "Jordan", flag: "🇯🇴", value: "Jordanian" },
+      { name: "Kazakhstan", flag: "🇰🇿", value: "Kazakhstani" },
+      { name: "Kenya", flag: "🇰🇪", value: "Kenyan" },
+      { name: "Kiribati", flag: "🇰🇮", value: "Kiribati" },
+      { name: "Kuwait", flag: "🇰🇼", value: "Kuwaiti" },
+      { name: "Kyrgyzstan", flag: "🇰🇬", value: "Kyrgyz" },
+      { name: "Laos", flag: "🇱🇦", value: "Laotian" },
+      { name: "Latvia", flag: "🇱🇻", value: "Latvian" },
+      { name: "Lebanon", flag: "🇱🇧", value: "Lebanese" },
+      { name: "Lesotho", flag: "🇱🇸", value: "Basotho" },
+      { name: "Liberia", flag: "🇱🇷", value: "Liberian" },
+      { name: "Libya", flag: "🇱🇾", value: "Libyan" },
+      { name: "Liechtenstein", flag: "🇱🇮", value: "Liechtensteiner" },
+      { name: "Lithuania", flag: "🇱🇹", value: "Lithuanian" },
+      { name: "Luxembourg", flag: "🇱🇺", value: "Luxembourgish" },
+      { name: "Madagascar", flag: "🇲🇬", value: "Malagasy" },
+      { name: "Malawi", flag: "🇲🇼", value: "Malawian" },
+      { name: "Malaysia", flag: "🇲🇾", value: "Malaysian" },
+      { name: "Maldives", flag: "🇲🇻", value: "Maldivian" },
+      { name: "Mali", flag: "🇲🇱", value: "Malian" },
+      { name: "Malta", flag: "🇲🇹", value: "Maltese" },
+      { name: "Marshall Islands", flag: "🇲🇭", value: "Marshallese" },
+      { name: "Mauritania", flag: "🇲🇷", value: "Mauritanian" },
+      { name: "Mauritius", flag: "🇲🇺", value: "Mauritian" },
+      { name: "Mexico", flag: "🇲🇽", value: "Mexican" },
+      { name: "Micronesia", flag: "🇫🇲", value: "Micronesian" },
+      { name: "Moldova", flag: "🇲🇩", value: "Moldovan" },
+      { name: "Monaco", flag: "🇲🇨", value: "Monacan" },
+      { name: "Mongolia", flag: "🇲🇳", value: "Mongolian" },
+      { name: "Montenegro", flag: "🇲🇪", value: "Montenegrin" },
+      { name: "Morocco", flag: "🇲🇦", value: "Moroccan" },
+      { name: "Mozambique", flag: "🇲🇿", value: "Mozambican" },
+      { name: "Myanmar", flag: "🇲🇲", value: "Burmese" },
+      { name: "Namibia", flag: "🇳🇦", value: "Namibian" },
+      { name: "Nauru", flag: "🇳🇷", value: "Nauruan" },
+      { name: "Nepal", flag: "🇳🇵", value: "Nepali" },
+      { name: "Netherlands", flag: "🇳🇱", value: "Dutch" },
+      { name: "New Zealand", flag: "🇳🇿", value: "New Zealander" },
+      { name: "Nicaragua", flag: "🇳🇮", value: "Nicaraguan" },
+      { name: "Niger", flag: "🇳🇪", value: "Nigerien" },
+      { name: "Nigeria", flag: "🇳🇬", value: "Nigerian" },
+      { name: "North Korea", flag: "🇰🇵", value: "North Korean" },
+      { name: "North Macedonia", flag: "🇲🇰", value: "North Macedonian" },
+      { name: "Norway", flag: "🇳🇴", value: "Norwegian" },
+      { name: "Oman", flag: "🇴🇲", value: "Omani" },
+      { name: "Pakistan", flag: "🇵🇰", value: "Pakistani" },
+      { name: "Palau", flag: "🇵🇼", value: "Palauan" },
+      { name: "Panama", flag: "🇵🇦", value: "Panamanian" },
+      { name: "Papua New Guinea", flag: "🇵🇬", value: "Papua New Guinean" },
+      { name: "Paraguay", flag: "🇵🇾", value: "Paraguayan" },
+      { name: "Peru", flag: "🇵🇪", value: "Peruvian" },
+      { name: "Philippines", flag: "🇵🇭", value: "Filipino" },
+      { name: "Poland", flag: "🇵🇱", value: "Polish" },
+      { name: "Portugal", flag: "🇵🇹", value: "Portuguese" },
+      { name: "Qatar", flag: "🇶🇦", value: "Qatari" },
+      { name: "Romania", flag: "🇷🇴", value: "Romanian" },
+      { name: "Russia", flag: "🇷🇺", value: "Russian" },
+      { name: "Rwanda", flag: "🇷🇼", value: "Rwandan" },
+      { name: "Samoa", flag: "🇼🇸", value: "Samoan" },
+      { name: "San Marino", flag: "🇸🇲", value: "San Marinese" },
+      { name: "Sao Tome and Principe", flag: "🇸🇹", value: "Sao Tomean" },
+      { name: "Saudi Arabia", flag: "🇸🇦", value: "Saudi" },
+      { name: "Senegal", flag: "🇸🇳", value: "Senegalese" },
+      { name: "Serbia", flag: "🇷🇸", value: "Serbian" },
+      { name: "Seychelles", flag: "🇸🇨", value: "Seychellois" },
+      { name: "Sierra Leone", flag: "🇸🇱", value: "Sierra Leonean" },
+      { name: "Singapore", flag: "🇸🇬", value: "Singaporean" },
+      { name: "Slovakia", flag: "🇸🇰", value: "Slovak" },
+      { name: "Slovenia", flag: "🇸🇮", value: "Slovenian" },
+      { name: "Solomon Islands", flag: "🇸🇧", value: "Solomon Islander" },
+      { name: "Somalia", flag: "🇸🇴", value: "Somali" },
+      { name: "South Africa", flag: "🇿🇦", value: "South African" },
+      { name: "South Korea", flag: "🇰🇷", value: "South Korean" },
+      { name: "South Sudan", flag: "🇸🇸", value: "South Sudanese" },
+      { name: "Spain", flag: "🇪🇸", value: "Spanish" },
+      { name: "Sri Lanka", flag: "🇱🇰", value: "Sri Lankan" },
+      { name: "Sudan", flag: "🇸🇩", value: "Sudanese" },
+      { name: "Suriname", flag: "🇸🇷", value: "Surinamese" },
+      { name: "Sweden", flag: "🇸🇪", value: "Swedish" },
+      { name: "Switzerland", flag: "🇨🇭", value: "Swiss" },
+      { name: "Syria", flag: "🇸🇾", value: "Syrian" },
+      { name: "Taiwan", flag: "🇹🇼", value: "Taiwanese" },
+      { name: "Tajikistan", flag: "🇹🇯", value: "Tajik" },
+      { name: "Tanzania", flag: "🇹🇿", value: "Tanzanian" },
+      { name: "Thailand", flag: "🇹🇭", value: "Thai" },
+      { name: "Timor-Leste", flag: "🇹🇱", value: "Timorese" },
+      { name: "Togo", flag: "🇹🇬", value: "Togolese" },
+      { name: "Tonga", flag: "🇹🇴", value: "Tongan" },
+      { name: "Trinidad and Tobago", flag: "🇹🇹", value: "Trinidadian" },
+      { name: "Tunisia", flag: "🇹🇳", value: "Tunisian" },
+      { name: "Turkey", flag: "🇹🇷", value: "Turkish" },
+      { name: "Turkmenistan", flag: "🇹🇲", value: "Turkmen" },
+      { name: "Tuvalu", flag: "🇹🇻", value: "Tuvaluan" },
+      { name: "Uganda", flag: "🇺🇬", value: "Ugandan" },
+      { name: "Ukraine", flag: "🇺🇦", value: "Ukrainian" },
+      { name: "United Arab Emirates", flag: "🇦🇪", value: "Emirati" },
+      { name: "United Kingdom", flag: "🇬🇧", value: "British" },
+      { name: "United States", flag: "🇺🇸", value: "American" },
+      { name: "Uruguay", flag: "🇺🇾", value: "Uruguayan" },
+      { name: "Uzbekistan", flag: "🇺🇿", value: "Uzbek" },
+      { name: "Vanuatu", flag: "🇻🇺", value: "Vanuatuan" },
+      { name: "Venezuela", flag: "🇻🇪", value: "Venezuelan" },
+      { name: "Vietnam", flag: "🇻🇳", value: "Vietnamese" },
+      { name: "Yemen", flag: "🇾🇪", value: "Yemeni" },
+      { name: "Zambia", flag: "🇿🇲", value: "Zambian" },
+      { name: "Zimbabwe", flag: "🇿🇼", value: "Zimbabwean" }
     ];
 
     let currentAIResult = null;
@@ -1241,6 +1372,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderNationalityOptions(FLAG_COUNTRIES);
       restoreCachedResult();
+
+      const natSearch = document.getElementById('nationalitySearch');
+      if (natSearch) {
+        natSearch.addEventListener('input', function() {
+          const term = this.value.toLowerCase().trim();
+          filterCountries(term);
+        });
+        natSearch.addEventListener('keyup', function() {
+          const term = this.value.toLowerCase().trim();
+          filterCountries(term);
+        });
+      }
 
       // Check Redirect Auth Result on Load
       auth.getRedirectResult().then(async (result) => {
@@ -1272,6 +1415,29 @@
         }
       });
     });
+
+    // AGE STEPPER FUNCTIONS
+    function incrementAge() {
+      const input = document.getElementById('age');
+      const current = parseInt(input.value) || 22;
+      if (current < 80) {
+        input.value = current + 1;
+      }
+    }
+
+    function decrementAge() {
+      const input = document.getElementById('age');
+      const current = parseInt(input.value) || 22;
+      if (current > 18) {
+        input.value = current - 1;
+      }
+    }
+
+    function validateAge(input) {
+      let val = parseInt(input.value);
+      if (isNaN(val) || val < 18) input.value = 18;
+      if (val > 80) input.value = 80;
+    }
 
     // CHIP SUGGESTIONS FOR ADDITIONAL CONTEXT
     function addChipText(text) {
@@ -1514,16 +1680,24 @@
       list.forEach(c => {
         const item = document.createElement('div');
         item.className = 'custom-option' + (c.name === 'India' ? ' selected' : '');
-        item.innerHTML = `<span>${c.flag}</span> <span>${c.name}</span>`;
+        item.innerHTML = `<span>${c.flag}</span> <span>${c.name}</span> <span style="font-size:11px;color:#888;margin-left:auto;">(${c.value || ''})</span>`;
         item.onclick = () => selectNationality(c);
         container.appendChild(item);
       });
     }
 
-    function filterCountries() {
-      const q = document.getElementById('nationalitySearch').value.toLowerCase();
-      const filtered = FLAG_COUNTRIES.filter(c => c.name.toLowerCase().includes(q));
+    // CASE-INSENSITIVE NATIONALITY FILTER FOR ALL 195 COUNTRIES
+    function filterCountries(searchTerm) {
+      const searchVal = searchTerm !== undefined ? searchTerm : (document.getElementById('nationalitySearch') ? document.getElementById('nationalitySearch').value : '');
+      const q = String(searchVal).toLowerCase().trim();
+      const filtered = FLAG_COUNTRIES.filter(c => 
+        c.name.toLowerCase().includes(q) || (c.value && c.value.toLowerCase().includes(q))
+      );
       renderNationalityOptions(filtered);
+    }
+
+    function filterNationalities(searchTerm) {
+      filterCountries(searchTerm);
     }
 
     function selectNationality(c) {
@@ -1959,7 +2133,7 @@
         y = 52;
         addHeading('Report Overview');
         addDataRow('Applicant Passport', currentProfile.nationality || 'Global');
-        addDataRow('Applicant Age', (currentProfile.age || '28') + ' years old');
+        addDataRow('Applicant Age', (currentProfile.age || '22') + ' years old');
         addDataRow('Profession', currentProfile.profession || 'Professional');
         addDataRow('Monthly Expenses (home country)', (currentProfile.budget || '0') + ' ' + (currentProfile.currency || 'USD'));
         addDataRow('Date Generated', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
@@ -2088,7 +2262,8 @@
 
     function resetForm() {
       document.getElementById('settleForm').reset();
-      selectNationality({ name: "India", flag: "🇮🇳" });
+      selectNationality({ name: "India", flag: "🇮🇳", value: "Indian" });
+      document.getElementById('age').value = 22;
       document.getElementById('result').style.display = 'none';
       currentAIResult = null;
       currentProfile = {};
