@@ -282,7 +282,7 @@
       border-color: #000000;
     }
 
-    /* FLOATING CUSTOM DROPDOWN (FIX 1) */
+    /* FLOATING CUSTOM DROPDOWN (EXACT USER SPEC) */
     .custom-select-wrapper { 
       position: relative; 
       width: 100%; 
@@ -309,12 +309,12 @@
       position: absolute; 
       top: 100%; 
       left: 0; 
-      right: 0;
-      z-index: 999;
-      background: #ffffff; 
+      right: 0; 
+      z-index: 999; 
+      background: white; 
       box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+      border-radius: 6px;
       border: 1px solid #e5e5e5;
-      border-radius: 6px; 
       max-height: 280px; 
       overflow-y: auto; 
       display: none; 
@@ -335,16 +335,16 @@
       margin-bottom: 8px; 
       outline: none;
     }
-    .custom-option {
-      padding: 8px 12px; 
-      border-radius: 6px; 
-      cursor: pointer;
-      display: flex; 
-      align-items: center; 
-      gap: 10px; 
+    .country-option {
+      padding: 10px; 
+      cursor: pointer; 
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 14px;
     }
-    .custom-option:hover, .custom-option.selected {
+    .country-option:hover, .country-option.selected {
       background: #f5f5f5; 
       color: #000000; 
       font-weight: 600;
@@ -817,7 +817,7 @@
               <input type="hidden" id="nationalityValue" value="India" />
             </div>
 
-            <!-- 2. MODERN AGE STEPPER (FIX 2 & FIX 3) -->
+            <!-- 2. MODERN AGE STEPPER -->
             <div class="form-group">
               <label for="age">Age *</label>
               <div id="ageStepper" style="display:flex;align-items:center;
@@ -1167,7 +1167,7 @@
           <div class="feature-desc">Covers job market demand, net salary, itemized rent, PR timelines, GPI peace ranking, and climate.</div>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">🛂</div>
+          <div class="feature-icon">厢</div>
           <div class="feature-title">Any Passport</div>
           <div class="feature-desc">Tailored visa availability and realistic residency timelines specific to your passport country.</div>
         </div>
@@ -1427,11 +1427,11 @@
       if (natSearch) {
         natSearch.addEventListener('input', function() {
           const term = this.value.toLowerCase().trim();
-          filterCountries(term);
-        });
-        natSearch.addEventListener('keyup', function() {
-          const term = this.value.toLowerCase().trim();
-          filterCountries(term);
+          const options = document.querySelectorAll('#countryListOptions .country-option');
+          options.forEach(opt => {
+            const text = opt.textContent.toLowerCase();
+            opt.style.display = text.includes(term) ? 'flex' : 'none';
+          });
         });
       }
 
@@ -1729,7 +1729,9 @@
       container.innerHTML = '';
       list.forEach(c => {
         const item = document.createElement('div');
-        item.className = 'custom-option' + (c.name === 'India' ? ' selected' : '');
+        item.className = 'country-option' + (c.name === 'India' ? ' selected' : '');
+        item.dataset.value = c.value || c.name;
+        item.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; font-size: 14px;';
         item.innerHTML = `<span>${c.flag}</span> <span>${c.name}</span> <span style="font-size:11px;color:#888;margin-left:auto;">(${c.value || ''})</span>`;
         item.onclick = () => selectNationality(c);
         container.appendChild(item);
@@ -1738,12 +1740,19 @@
 
     // CASE-INSENSITIVE NATIONALITY FILTER FOR ALL 195 COUNTRIES
     function filterCountries(searchTerm) {
-      const searchVal = searchTerm !== undefined ? searchTerm : (document.getElementById('nationalitySearch') ? document.getElementById('nationalitySearch').value : '');
-      const q = String(searchVal).toLowerCase().trim();
-      const filtered = FLAG_COUNTRIES.filter(c => 
-        c.name.toLowerCase().includes(q) || (c.value && c.value.toLowerCase().includes(q))
-      );
-      renderNationalityOptions(filtered);
+      const term = String(searchTerm !== undefined ? searchTerm : (document.getElementById('nationalitySearch') ? document.getElementById('nationalitySearch').value : '')).toLowerCase().trim();
+      const options = document.querySelectorAll('#countryListOptions .country-option');
+      if (options.length > 0) {
+        options.forEach(opt => {
+          const text = opt.textContent.toLowerCase();
+          opt.style.display = text.includes(term) ? 'flex' : 'none';
+        });
+      } else {
+        const filtered = FLAG_COUNTRIES.filter(c => 
+          c.name.toLowerCase().includes(term) || (c.value && c.value.toLowerCase().includes(term))
+        );
+        renderNationalityOptions(filtered);
+      }
     }
 
     function filterNationalities(searchTerm) {
