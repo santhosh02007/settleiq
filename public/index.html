@@ -216,7 +216,7 @@
       border-bottom: 1px solid #e5e5e5;
     }
     
-    /* SINGLE COLUMN FORM LAYOUT (FIX 2) */
+    /* SINGLE COLUMN FORM LAYOUT */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -224,7 +224,7 @@
     }
     .form-group.span-2 { grid-column: span 1; }
 
-    /* TITLE CASE LABELS (FIX 3) */
+    /* TITLE CASE LABELS */
     label {
       display: block;
       font-size: 13px;
@@ -252,6 +252,11 @@
       box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
     }
 
+    /* AGE STEPPER HOVER EFFECT */
+    .stepper-btn:hover {
+      background: #e9ecef !important;
+    }
+
     /* SUGGESTION CHIPS */
     .chips-wrapper {
       display: flex;
@@ -277,7 +282,7 @@
       border-color: #000000;
     }
 
-    /* SEARCHABLE FLAG NATIONALITY DROPDOWN (FIX 1) */
+    /* FLOATING CUSTOM DROPDOWN (FIX 1) */
     .custom-select-wrapper { 
       position: relative; 
       width: 100%; 
@@ -302,18 +307,19 @@
     }
     .custom-select-dropdown {
       position: absolute; 
-      top: calc(100% + 4px); 
+      top: 100%; 
       left: 0; 
       right: 0;
+      z-index: 999;
       background: #ffffff; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
       border: 1px solid #e5e5e5;
-      border-radius: 8px; 
+      border-radius: 6px; 
       max-height: 280px; 
       overflow-y: auto; 
-      z-index: 1000;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12); 
       display: none; 
       padding: 8px;
+      margin-top: 4px;
     }
     .custom-select-dropdown.open { 
       display: block; 
@@ -795,7 +801,7 @@
         <form id="settleForm" onsubmit="handleFormSubmit(event)">
           <div class="form-grid">
 
-            <!-- 1. Searchable Flag Dropdown (ALL 195 UN COUNTRIES) -->
+            <!-- 1. Searchable Flag Dropdown (FLOATING OVERLAY - FIX 1) -->
             <div class="form-group">
               <label>Passport Nationality *</label>
               <div class="custom-select-wrapper">
@@ -811,33 +817,33 @@
               <input type="hidden" id="nationalityValue" value="India" />
             </div>
 
-            <!-- 2. AGE STEPPER WITH +/- BUTTONS -->
+            <!-- 2. MODERN AGE STEPPER (FIX 2 & FIX 3) -->
             <div class="form-group">
-              <label>Age *</label>
+              <label for="age">Age *</label>
               <div id="ageStepper" style="display:flex;align-items:center;
-                gap:0;border:1px solid #e5e5e5;border-radius:8px;
-                overflow:hidden;background:#fff;width:100%;">
-                <button type="button" onclick="decrementAge()"
-                  style="width:48px;height:48px;background:#f5f5f5;
+                gap:0;border:1px solid #ccc;border-radius:8px;
+                overflow:hidden;background:#fff;max-width:180px;width:100%;">
+                <button type="button" class="stepper-btn" onclick="decrementAge()"
+                  style="width:44px;height:44px;background:#f8f9fa;
                   border:none;border-right:1px solid #e5e5e5;
-                  cursor:pointer;font-size:20px;font-weight:300;
-                  color:#111;display:flex;align-items:center;
-                  justify-content:center;flex-shrink:0;">
+                  cursor:pointer;font-size:18px;font-weight:500;
+                  color:#333;display:flex;align-items:center;
+                  justify-content:center;flex-shrink:0;transition:background 0.15s;">
                   −
                 </button>
                 <input type="number" id="age" name="age" 
                   value="22" min="18" max="80"
                   style="flex:1;text-align:center;border:none;
-                  outline:none;font-size:18px;font-weight:600;
-                  color:#111;padding:12px 0;background:#fff;
+                  outline:none;font-size:16px;font-weight:600;
+                  color:#111;padding:10px 0;background:#fff;
                   -moz-appearance:textfield;"
                   onchange="validateAge(this)">
-                <button type="button" onclick="incrementAge()"
-                  style="width:48px;height:48px;background:#f5f5f5;
+                <button type="button" class="stepper-btn" onclick="incrementAge()"
+                  style="width:44px;height:44px;background:#f8f9fa;
                   border:none;border-left:1px solid #e5e5e5;
-                  cursor:pointer;font-size:20px;font-weight:300;
-                  color:#111;display:flex;align-items:center;
-                  justify-content:center;flex-shrink:0;">
+                  cursor:pointer;font-size:18px;font-weight:500;
+                  color:#333;display:flex;align-items:center;
+                  justify-content:center;flex-shrink:0;transition:background 0.15s;">
                   +
                 </button>
               </div>
@@ -877,7 +883,7 @@
               </select>
             </div>
 
-            <!-- 6. CURRENT MONTHLY EXPENSES (YOUR COUNTRY) + CURRENCY SELECTOR (FIX 4: FULL VISIBILITY & FLEX WRAP) -->
+            <!-- 6. CURRENT MONTHLY EXPENSES (YOUR COUNTRY) + CURRENCY SELECTOR -->
             <div class="form-group">
               <label for="budget">Current Monthly Expenses (Your Country) *</label>
               <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%;">
