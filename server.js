@@ -274,27 +274,65 @@ Return ONLY valid JSON. No text outside JSON. Structure:
       return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
     }
 
-    console.log('Sending request to Gemini 3.5 Flash API...');
+    const maxRetries = 3;
+    let apiResponse = null;
+    let data = null;
+    let isBusyError = false;
 
-    const apiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log(`Sending request to Gemini 3.5 Flash API (attempt ${attempt}/${maxRetries})...`);
+
+      try {
+        apiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
           }
-        })
+        );
+
+        data = await apiResponse.json();
+
+        const statusIs503 = apiResponse.status === 503;
+        const errText = JSON.stringify(data || {}).toLowerCase();
+        isBusyError = statusIs503 || errText.includes('high demand') || errText.includes('temporarily unavailable') || errText.includes('resource_exhausted') || errText.includes('overloaded');
+
+        if (apiResponse.ok && data.candidates && data.candidates[0]) {
+          break;
+        }
+
+        if (isBusyError) {
+          console.warn(`Gemini API busy (503 / high demand). Attempt ${attempt}/${maxRetries} failed.`);
+          if (attempt < maxRetries) {
+            console.log('Waiting 5 seconds before retrying attempt...');
+            await new Promise(r => setTimeout(r, 5000));
+            continue;
+          }
+        } else {
+          break;
+        }
+      } catch (fetchErr) {
+        console.error(`Fetch attempt ${attempt} error:`, fetchErr.message);
+        if (attempt < maxRetries) {
+          console.log('Waiting 5 seconds before retrying attempt...');
+          await new Promise(r => setTimeout(r, 5000));
+        }
       }
-    );
+    }
 
-    const data = await apiResponse.json();
+    if (isBusyError && (!apiResponse || !apiResponse.ok || !data || !data.candidates || !data.candidates[0])) {
+      return res.status(503).json({ error: 'Our AI is busy right now. Please try again in 30 seconds.' });
+    }
 
-    if (!apiResponse.ok || !data.candidates || !data.candidates[0]) {
-      const errMsg = data.error ? data.error.message : 'No candidate response returned by Gemini AI.';
-      console.error('Gemini API Error details:', data.error || data);
+    if (!apiResponse || !apiResponse.ok || !data || !data.candidates || !data.candidates[0]) {
+      const errMsg = (data && data.error) ? data.error.message : 'No candidate response returned by Gemini AI.';
+      console.error('Gemini API Error details:', (data && data.error) || data);
       return res.status(500).json({ error: errMsg });
     }
 
