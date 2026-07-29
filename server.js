@@ -121,6 +121,7 @@ app.post('/analyze', async (req, res) => {
 
     const nationality = sanitize(rawBody.nationality || 'India');
     const age = sanitize(String(rawBody.age || '28'));
+    const gender = sanitize(rawBody.gender || 'Prefer not to say');
     const profession = sanitize(rawBody.profession || 'Professional');
     const budget = sanitize(String(rawBody.budget || '50000'));
     const currency = sanitize(rawBody.currency || 'INR');
@@ -142,6 +143,7 @@ app.post('/analyze', async (req, res) => {
 USER PROFILE:
 - Passport Nationality: ${nationality}
 - User age: ${age} years old
+- Gender: ${gender}
 - Profession/Skill: ${profession}
 - Education Level: ${education}
 - Work Experience: ${experience}
