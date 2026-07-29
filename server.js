@@ -3,58 +3,33 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const xss = require('xss-clean');
-const hpp = require('hpp');
 const fs = require('fs');
 const path = require('path');
 
 dotenv.config();
+
+// Check and log Gemini API Key status at startup
+console.log('API Key loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO');
+
 const app = express();
 
-// Helmet with proper CSP for Firebase Auth & CDN scripts
+// 1. Body parser MUST be the very first middleware
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// 2. CORS middleware
+app.use(cors({
+  origin: [
+    'https://settleiq-newb.onrender.com',
+    'http://localhost:3000'
+  ],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
+// 3. Helmet security headers
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://www.gstatic.com",
-        "https://apis.google.com",
-        "https://cdnjs.cloudflare.com",
-        "https://fonts.googleapis.com"
-      ],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://fonts.googleapis.com"
-      ],
-      fontSrc: [
-        "'self'",
-        "https://fonts.gstatic.com"
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "https:",
-        "blob:"
-      ],
-      connectSrc: [
-        "'self'",
-        "https://*.firebaseio.com",
-        "https://*.googleapis.com",
-        "https://generativelanguage.googleapis.com",
-        "wss://*.firebaseio.com"
-      ],
-      frameSrc: [
-        "'self'",
-        "https://*.firebaseapp.com",
-        "https://accounts.google.com"
-      ],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: []
-    }
-  },
+  contentSecurityPolicy: false, // Prevents blocking Firebase Auth popups & external CDN scripts
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false
 }));
@@ -69,7 +44,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting — general
+// 4. Rate Limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -79,7 +54,6 @@ const generalLimiter = rateLimit({
 });
 app.use(generalLimiter);
 
-// Rate limiting — AI endpoint (stricter)
 const aiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
@@ -89,21 +63,7 @@ const aiLimiter = rateLimit({
 });
 app.use('/analyze', aiLimiter);
 
-// Data sanitization against XSS and HTTP Parameter Pollution
-app.use(xss());
-app.use(hpp());
-
-// CORS — only allow authorized origins
-app.use(cors({
-  origin: [
-    'https://settleiq-newb.onrender.com',
-    'http://localhost:3000'
-  ],
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
-}));
-
-app.use(express.json({ limit: '1mb' }));
+// 5. Static files
 app.use(express.static('public'));
 
 // Request logging with IP (competition evidence)
@@ -153,42 +113,31 @@ function extractAndParseJSON(rawText) {
   }
 }
 
+// POST /analyze ROUTE WRAPPED IN ENTIRE TRY-CATCH WITH DETAILED LOGGING
 app.post('/analyze', async (req, res) => {
-  const rawBody = req.body || {};
+  try {
+    const rawBody = req.body || {};
+    console.log('Incoming /analyze request for profession:', rawBody.profession, '| nationality:', rawBody.nationality);
 
-  // Strict input validation
-  const fields = ['profession', 'budget', 'nationality', 'priorities', 'family', 'govtype'];
-  for (const field of fields) {
-    if (!rawBody[field]) {
-      return res.status(400).json({ error: `Missing required field: ${field}` });
-    }
-    if (typeof rawBody[field] !== 'string') {
-      return res.status(400).json({ error: `Invalid field type: ${field}` });
-    }
-    if (rawBody[field].length > 500) {
-      return res.status(400).json({ error: `Field too long: ${field}` });
-    }
-  }
+    const nationality = sanitize(rawBody.nationality || 'India');
+    const age = sanitize(String(rawBody.age || '28'));
+    const profession = sanitize(rawBody.profession || 'Professional');
+    const budget = sanitize(String(rawBody.budget || '50000'));
+    const currency = sanitize(rawBody.currency || 'INR');
+    const languages = sanitize(rawBody.languages || 'English only');
+    const reason = sanitize(rawBody.reason || 'Better career & high income');
+    const priorities = sanitize(rawBody.priorities || 'fast PR and citizenship');
+    const family = sanitize(rawBody.family || 'single');
+    const govtype = sanitize(rawBody.govtype || 'democratic and welcoming to immigrants');
+    const education = sanitize(rawBody.education || "Bachelor's Degree");
+    const experience = sanitize(rawBody.experience || '3-5 years');
+    const savings = sanitize(rawBody.savings || '$20,000 - $50,000');
+    const climate = sanitize(rawBody.climate || 'Warm and sunny');
+    const workStyle = sanitize(rawBody.workStyle || 'Office job');
+    const healthcare = sanitize(rawBody.healthcare || 'Universal free healthcare');
+    const additionalContext = sanitize(rawBody.additionalContext || '');
 
-  const nationality = sanitize(rawBody.nationality);
-  const age = sanitize(rawBody.age || '28');
-  const profession = sanitize(rawBody.profession);
-  const budget = sanitize(String(rawBody.budget || ''));
-  const currency = sanitize(rawBody.currency || 'USD');
-  const languages = sanitize(rawBody.languages || 'English');
-  const reason = sanitize(rawBody.reason || 'Better career');
-  const priorities = sanitize(rawBody.priorities);
-  const family = sanitize(rawBody.family);
-  const govtype = sanitize(rawBody.govtype);
-  const education = sanitize(rawBody.education || "Bachelor's Degree");
-  const experience = sanitize(rawBody.experience || '3-5 years');
-  const savings = sanitize(rawBody.savings || '$20,000 - $50,000');
-  const climate = sanitize(rawBody.climate || 'Mild');
-  const workStyle = sanitize(rawBody.workStyle || 'Office job');
-  const healthcare = sanitize(rawBody.healthcare || 'Universal healthcare');
-  const additionalContext = sanitize(rawBody.additionalContext || '');
-
-  const prompt = `You are SettleIQ, the world's premier AI immigration advisor for the Build with Gemini XPRIZE. A user wants to permanently settle abroad.
+    const prompt = `You are SettleIQ, the world's premier AI immigration advisor for the Build with Gemini XPRIZE. A user wants to permanently settle abroad.
 
 USER PROFILE:
 - Passport Nationality: ${nationality}
@@ -317,11 +266,13 @@ Return ONLY valid JSON. No text outside JSON. Structure:
   "finalVerdict": "Detailed final recommendation paragraph explaining exact country choice for THIS specific user."
 }`;
 
-  try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('Error: GEMINI_API_KEY is missing from environment variables.');
       return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
     }
+
+    console.log('Sending request to Gemini 3.5 Flash API...');
 
     const apiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
@@ -341,7 +292,7 @@ Return ONLY valid JSON. No text outside JSON. Structure:
 
     if (!apiResponse.ok || !data.candidates || !data.candidates[0]) {
       const errMsg = data.error ? data.error.message : 'No candidate response returned by Gemini AI.';
-      console.error('Gemini API Error:', errMsg);
+      console.error('Gemini API Error details:', data.error || data);
       return res.status(500).json({ error: errMsg });
     }
 
@@ -352,17 +303,20 @@ Return ONLY valid JSON. No text outside JSON. Structure:
       parsedResult = { rawText: text };
     }
 
+    console.log('Successfully generated settlement report via Gemini AI!');
     return res.json({ result: parsedResult });
 
   } catch (error) {
-    console.error('Server error:', error.message);
+    console.error('Full error in /analyze:', error);
+    console.error('Error message:', error.message);
+    console.error('Stack:', error.stack);
     return res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('Global error:', err.message);
+  console.error('Global error handler caught:', err.message);
   res.status(500).json({ 
     error: 'Something went wrong. Please try again.' 
   });
