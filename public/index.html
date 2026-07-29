@@ -205,7 +205,7 @@
       border: 1px solid #e5e5e5;
       border-radius: 12px;
       padding: 40px;
-      max-width: 860px;
+      max-width: 800px;
       margin: 0 auto;
     }
     .form-title-head {
@@ -215,20 +215,23 @@
       padding-bottom: 16px;
       border-bottom: 1px solid #e5e5e5;
     }
+    
+    /* SINGLE COLUMN FORM LAYOUT (FIX 2) */
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 24px;
     }
-    .form-group.span-2 { grid-column: span 2; }
+    .form-group.span-2 { grid-column: span 1; }
 
+    /* TITLE CASE LABELS (FIX 3) */
     label {
       display: block;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #666666;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: normal;
+      color: #333333;
       margin-bottom: 8px;
     }
 
@@ -274,29 +277,71 @@
       border-color: #000000;
     }
 
-    /* SEARCHABLE FLAG NATIONALITY DROPDOWN */
-    .custom-select-wrapper { position: relative; width: 100%; }
+    /* SEARCHABLE FLAG NATIONALITY DROPDOWN (FIX 1) */
+    .custom-select-wrapper { 
+      position: relative; 
+      width: 100%; 
+    }
     .custom-select-trigger {
-      display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111111;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer; 
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .custom-select-trigger:hover {
+      border-color: #000000;
     }
     .custom-select-dropdown {
-      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-      background: #ffffff; border: 1px solid #e5e5e5;
-      border-radius: 8px; max-height: 260px; overflow-y: auto; z-index: 1000;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; padding: 6px;
+      position: absolute; 
+      top: calc(100% + 4px); 
+      left: 0; 
+      right: 0;
+      background: #ffffff; 
+      border: 1px solid #e5e5e5;
+      border-radius: 8px; 
+      max-height: 280px; 
+      overflow-y: auto; 
+      z-index: 1000;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12); 
+      display: none; 
+      padding: 8px;
     }
-    .custom-select-dropdown.open { display: block; }
+    .custom-select-dropdown.open { 
+      display: block; 
+    }
     .custom-select-search {
-      width: 100%; padding: 8px 12px; background: #f9f9f9;
-      border: 1px solid #e5e5e5; border-radius: 6px;
-      color: #111111; font-size: 14px; margin-bottom: 6px; outline: none;
+      width: 100%; 
+      padding: 10px 14px; 
+      background: #f9f9f9;
+      border: 1px solid #e5e5e5; 
+      border-radius: 6px;
+      color: #111111; 
+      font-size: 14px; 
+      margin-bottom: 8px; 
+      outline: none;
     }
     .custom-option {
-      padding: 8px 12px; border-radius: 6px; cursor: pointer;
-      display: flex; align-items: center; gap: 10px; font-size: 14px;
+      padding: 8px 12px; 
+      border-radius: 6px; 
+      cursor: pointer;
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      font-size: 14px;
     }
     .custom-option:hover, .custom-option.selected {
-      background: #f5f5f5; color: #000000; font-weight: 600;
+      background: #f5f5f5; 
+      color: #000000; 
+      font-weight: 600;
     }
 
     /* SUBMIT BUTTON */
@@ -614,8 +659,7 @@
       nav { padding: 16px 20px; }
       .hero-title { font-size: 36px; }
       .section-title { font-size: 28px; }
-      .steps-grid, .form-grid, .features-grid, .actions-row { grid-template-columns: 1fr; }
-      .form-group.span-2 { grid-column: span 1; }
+      .steps-grid, .features-grid, .actions-row { grid-template-columns: 1fr; }
       .footer-flex { flex-direction: column; gap: 16px; text-align: center; }
       .country-header { flex-wrap: wrap; }
       .match-score { margin-left: 0; width: 100%; text-align: left; margin-top: 8px; }
@@ -769,7 +813,7 @@
 
             <!-- 2. AGE STEPPER WITH +/- BUTTONS -->
             <div class="form-group">
-              <label>AGE *</label>
+              <label>Age *</label>
               <div id="ageStepper" style="display:flex;align-items:center;
                 gap:0;border:1px solid #e5e5e5;border-radius:8px;
                 overflow:hidden;background:#fff;width:100%;">
@@ -833,12 +877,12 @@
               </select>
             </div>
 
-            <!-- 6. CURRENT MONTHLY EXPENSES (YOUR COUNTRY) + CURRENCY SELECTOR -->
+            <!-- 6. CURRENT MONTHLY EXPENSES (YOUR COUNTRY) + CURRENCY SELECTOR (FIX 4: FULL VISIBILITY & FLEX WRAP) -->
             <div class="form-group">
               <label for="budget">Current Monthly Expenses (Your Country) *</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="number" id="budget" placeholder="e.g. 50000 (in your local currency)" min="1" required style="flex: 1;" />
-                <select id="currency" required style="width: 180px; flex: none;">
+              <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%;">
+                <input type="number" id="budget" placeholder="e.g. 50000 (in your local currency)" min="1" required style="flex: 1 1 240px; width: 100%; min-width: 0;" />
+                <select id="currency" required style="flex: 0 0 220px; width: auto; max-width: 100%;">
                   <option value="INR" selected>🇮🇳 Indian Rupee (₹ INR)</option>
                   <option value="USD">🇺🇸 US Dollar ($ USD)</option>
                   <option value="EUR">🇪🇺 Euro (€ EUR)</option>
