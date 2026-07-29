@@ -20,10 +20,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Firebase Compat CDN Libraries (v10.12.0) with defer -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+  <!-- Firebase Compat CDN Libraries (v10.12.0) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
   <!-- PDF & Markdown Libraries with defer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" defer></script>
@@ -801,7 +801,7 @@
         <form id="settleForm" onsubmit="handleFormSubmit(event)">
           <div class="form-grid">
 
-            <!-- 1. Searchable Flag Dropdown (FLOATING OVERLAY - FIX 1) -->
+            <!-- 1. Searchable Flag Dropdown (FLOATING OVERLAY) -->
             <div class="form-group">
               <label>Passport Nationality *</label>
               <div class="custom-select-wrapper">
@@ -1167,7 +1167,7 @@
           <div class="feature-desc">Covers job market demand, net salary, itemized rent, PR timelines, GPI peace ranking, and climate.</div>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">厢</div>
+          <div class="feature-icon">🛂</div>
           <div class="feature-title">Any Passport</div>
           <div class="feature-desc">Tailored visa availability and realistic residency timelines specific to your passport country.</div>
         </div>
@@ -1214,13 +1214,13 @@
       measurementId: "G-2FS1XT4VG0"
     };
 
-    // Initialize Firebase Services cleanly
+    // Ensure initializeApp completes BEFORE initializing auth, db, and googleProvider variables
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+    var googleProvider = new firebase.auth.GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
     // COMPLETE UN-RECOGNIZED 195 COUNTRIES LIST WITH FLAGS & DEMONYMS
@@ -1426,31 +1426,28 @@
       const natSearch = document.getElementById('nationalitySearch');
       if (natSearch) {
         natSearch.addEventListener('input', function() {
-          const term = this.value.toLowerCase().trim();
-          const options = document.querySelectorAll('#countryListOptions .country-option');
-          options.forEach(opt => {
-            const text = opt.textContent.toLowerCase();
-            opt.style.display = text.includes(term) ? 'flex' : 'none';
-          });
+          filterCountries(this.value);
         });
       }
 
       // Check Redirect Auth Result on Load
-      auth.getRedirectResult().then(async (result) => {
-        if (result && result.user) {
-          const user = result.user;
-          await db.collection("users").doc(user.uid).set({
-            name: user.displayName || '',
-            email: user.email || '',
-            photoURL: user.photoURL || '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-          showToast(`Welcome back, ${user.displayName || 'User'}!`);
-        }
-      }).catch((error) => {
-        console.error("Redirect Auth Error:", error);
-      });
+      if (auth) {
+        auth.getRedirectResult().then(async (result) => {
+          if (result && result.user) {
+            const user = result.user;
+            await db.collection("users").doc(user.uid).set({
+              name: user.displayName || '',
+              email: user.email || '',
+              photoURL: user.photoURL || '',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            showToast(`Welcome back, ${user.displayName || 'User'}!`);
+          }
+        }).catch((error) => {
+          console.error("Redirect Auth Error:", error);
+        });
+      }
 
       document.addEventListener('click', (e) => {
         const menu = document.getElementById('userMenu');
@@ -1505,7 +1502,8 @@
     }
 
     function signOutUser() {
-      firebase.auth().signOut().then(() => {
+      if (!auth) return;
+      auth.signOut().then(() => {
         const pd = document.getElementById('profileDropdown');
         if (pd) pd.style.display = 'none';
         const section = document.getElementById('myReportsSection');
@@ -1528,7 +1526,8 @@
     }
 
     function showAccountInfo() {
-      const user = firebase.auth().currentUser;
+      if (!auth) return;
+      const user = auth.currentUser;
       if (!user) return;
       const pd = document.getElementById('profileDropdown');
       if (pd) pd.style.display = 'none';
@@ -1544,30 +1543,33 @@
     }
 
     // AUTH STATE LISTENER
-    firebase.auth().onAuthStateChanged(function(user) {
-      if (user) {
-        document.getElementById('signInBtn').style.display = 'none';
-        document.getElementById('userMenu').style.display = 'block';
-        document.getElementById('userAvatar').src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
-        document.getElementById('dropdownAvatar').src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
-        document.getElementById('userName').textContent = 
-          user.displayName ? user.displayName.split(' ')[0] : 'User';
-        document.getElementById('dropdownName').textContent = 
-          user.displayName || 'User';
-        document.getElementById('dropdownEmail').textContent = 
-          user.email || '';
-        loadMyReports(user.uid);
-      } else {
-        document.getElementById('signInBtn').style.display = 'block';
-        document.getElementById('userMenu').style.display = 'none';
-        const section = document.getElementById('myReportsSection');
-        if (section) section.style.display = 'none';
-      }
-    });
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          document.getElementById('signInBtn').style.display = 'none';
+          document.getElementById('userMenu').style.display = 'block';
+          document.getElementById('userAvatar').src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+          document.getElementById('dropdownAvatar').src = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+          document.getElementById('userName').textContent = 
+            user.displayName ? user.displayName.split(' ')[0] : 'User';
+          document.getElementById('dropdownName').textContent = 
+            user.displayName || 'User';
+          document.getElementById('dropdownEmail').textContent = 
+            user.email || '';
+          loadMyReports(user.uid);
+        } else {
+          document.getElementById('signInBtn').style.display = 'block';
+          document.getElementById('userMenu').style.display = 'none';
+          const section = document.getElementById('myReportsSection');
+          if (section) section.style.display = 'none';
+        }
+      });
+    }
 
     // GOOGLE SIGN IN
     async function signInWithGoogle() {
       try {
+        if (!auth || !googleProvider) return;
         const result = await auth.signInWithPopup(googleProvider);
         const user = result.user;
         if (user) {
@@ -1600,12 +1602,11 @@
       const section = document.getElementById('myReportsSection');
       const container = document.getElementById('reportsContainer');
       
-      if (!section || !container) return;
+      if (!section || !container || !db) return;
       section.style.display = 'block';
       container.innerHTML = '<p style="color:#666;">Loading your reports...</p>';
 
-      firebase.firestore()
-        .collection('users')
+      db.collection('users')
         .doc(uid)
         .collection('reports')
         .orderBy('timestamp', 'desc')
@@ -1701,9 +1702,8 @@
     }
 
     function deleteReport(docId, uid, btn) {
-      if (!confirm('Delete this report?')) return;
-      firebase.firestore()
-        .collection('users').doc(uid)
+      if (!confirm('Delete this report?') || !db) return;
+      db.collection('users').doc(uid)
         .collection('reports').doc(docId)
         .delete()
         .then(() => {
@@ -1727,6 +1727,10 @@
       const container = document.getElementById('countryListOptions');
       if (!container) return;
       container.innerHTML = '';
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div style="padding: 12px; color: #888; font-size: 14px; text-align: center;">No country found</div>';
+        return;
+      }
       list.forEach(c => {
         const item = document.createElement('div');
         item.className = 'country-option' + (c.name === 'India' ? ' selected' : '');
@@ -1740,19 +1744,12 @@
 
     // CASE-INSENSITIVE NATIONALITY FILTER FOR ALL 195 COUNTRIES
     function filterCountries(searchTerm) {
-      const term = String(searchTerm !== undefined ? searchTerm : (document.getElementById('nationalitySearch') ? document.getElementById('nationalitySearch').value : '')).toLowerCase().trim();
-      const options = document.querySelectorAll('#countryListOptions .country-option');
-      if (options.length > 0) {
-        options.forEach(opt => {
-          const text = opt.textContent.toLowerCase();
-          opt.style.display = text.includes(term) ? 'flex' : 'none';
-        });
-      } else {
-        const filtered = FLAG_COUNTRIES.filter(c => 
-          c.name.toLowerCase().includes(term) || (c.value && c.value.toLowerCase().includes(term))
-        );
-        renderNationalityOptions(filtered);
-      }
+      const searchVal = searchTerm !== undefined ? searchTerm : (document.getElementById('nationalitySearch') ? document.getElementById('nationalitySearch').value : '');
+      const term = String(searchVal).toLowerCase().trim();
+      const filtered = FLAG_COUNTRIES.filter(c => 
+        c.name.toLowerCase().includes(term) || (c.value && c.value.toLowerCase().includes(term))
+      );
+      renderNationalityOptions(filtered);
     }
 
     function filterNationalities(searchTerm) {
@@ -1824,30 +1821,31 @@
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
         // SAVE REPORT TO FIRESTORE IMMEDIATELY AFTER DISPLAYING RESULT
-        const user = firebase.auth().currentUser;
-        if (user) {
-          console.log('Saving report for user:', user.uid);
-          firebase.firestore()
-            .collection('users')
-            .doc(user.uid)
-            .collection('reports')
-            .add({
-              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-              createdAt: new Date().toISOString(),
-              profession: document.getElementById('profession').value || '',
-              nationality: document.getElementById('nationalityValue') ? document.getElementById('nationalityValue').value : '',
-              budget: document.getElementById('budget').value || '',
-              currency: document.getElementById('currency') ? document.getElementById('currency').value : 'INR',
-              topCountry: (data.result && data.result.bestMatch) ? data.result.bestMatch : 'See full report',
-              fullResultHTML: document.getElementById('result').innerHTML,
-              allInputs: profile,
-              fullResultJSON: data.result
-            })
-            .then(() => {
-              console.log('Report saved successfully');
-              loadMyReports(user.uid);
-            })
-            .catch(err => console.error('Error saving report:', err));
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+          const user = firebase.auth().currentUser;
+          if (user && db) {
+            console.log('Saving report for user:', user.uid);
+            db.collection('users')
+              .doc(user.uid)
+              .collection('reports')
+              .add({
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                createdAt: new Date().toISOString(),
+                profession: document.getElementById('profession').value || '',
+                nationality: document.getElementById('nationalityValue') ? document.getElementById('nationalityValue').value : '',
+                budget: document.getElementById('budget').value || '',
+                currency: document.getElementById('currency') ? document.getElementById('currency').value : 'INR',
+                topCountry: (data.result && data.result.bestMatch) ? data.result.bestMatch : 'See full report',
+                fullResultHTML: document.getElementById('result').innerHTML,
+                allInputs: profile,
+                fullResultJSON: data.result
+              })
+              .then(() => {
+                console.log('Report saved successfully');
+                loadMyReports(user.uid);
+              })
+              .catch(err => console.error('Error saving report:', err));
+          }
         }
 
       } catch (err) {
