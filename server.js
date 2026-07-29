@@ -3,30 +3,116 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 const fs = require('fs');
 const path = require('path');
 
 dotenv.config();
 const app = express();
 
-// Security Headers - Fixed for Firebase Auth Popup Communication & Render Deployment
+// Helmet with proper CSP for Firebase Auth & CDN scripts
 app.use(helmet({
-  contentSecurityPolicy: false, // Disables default CSP so CDN scripts, marked, & Firebase work cleanly
-  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // Allows popup window (window.opener) to communicate with Firebase auth handler
-  crossOriginEmbedderPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://www.gstatic.com",
+        "https://apis.google.com",
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://fonts.gstatic.com"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https:",
+        "blob:"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://*.firebaseio.com",
+        "https://*.googleapis.com",
+        "https://generativelanguage.googleapis.com",
+        "wss://*.firebaseio.com"
+      ],
+      frameSrc: [
+        "'self'",
+        "https://*.firebaseapp.com",
+        "https://accounts.google.com"
+      ],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false
 }));
 
-app.use(cors());
+// Additional Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+// Rate limiting — general
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use(generalLimiter);
+
+// Rate limiting — AI endpoint (stricter)
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { error: 'AI report limit reached. Try again in 1 hour.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/analyze', aiLimiter);
+
+// Data sanitization against XSS and HTTP Parameter Pollution
+app.use(xss());
+app.use(hpp());
+
+// CORS — only allow authorized origins
+app.use(cors({
+  origin: [
+    'https://settleiq-newb.onrender.com',
+    'http://localhost:3000'
+  ],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
 
-// Rate Limiting: max 10 requests per hour per IP
-const analyzeLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour window
-  max: 10, // 10 requests per hour
-  message: { error: 'Rate limit exceeded: Maximum 10 requests per hour per IP. Please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false
+// Request logging with IP (competition evidence)
+app.use((req, res, next) => {
+  const log = `${new Date().toISOString()} | ${req.method} | ${req.path} | IP: ${req.ip}\n`;
+  fs.appendFile(path.join(__dirname, 'logs.txt'), log, (err) => {
+    if (err) console.error('Failed to append to logs.txt:', err.message);
+  });
+  next();
 });
 
 // Helper for sanitizing user inputs
@@ -43,17 +129,14 @@ function sanitize(input) {
 function extractAndParseJSON(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
   
-  // 1. Remove markdown code fences
   let clean = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
-  // 2. Extract first '{' to last '}'
   const start = clean.indexOf('{');
   const end = clean.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
     clean = clean.substring(start, end + 1);
   }
 
-  // 3. Try standard parse
   try {
     return JSON.parse(clean);
   } catch (err1) {
@@ -70,49 +153,46 @@ function extractAndParseJSON(rawText) {
   }
 }
 
-// Request Logger: appends request evidence to logs.txt
-function logRequest({ nationality, profession, budget, recommendedCountries }) {
-  const timestamp = new Date().toISOString();
-  const logLine = `[${timestamp}] Nationality: ${nationality} | Profession: ${profession} | Budget: ${budget} | Recommended: ${recommendedCountries || 'N/A'}\n`;
-  fs.appendFile(path.join(__dirname, 'logs.txt'), logLine, (err) => {
-    if (err) console.error('Failed to write to logs.txt:', err.message);
-  });
-}
-
-app.post('/analyze', analyzeLimiter, async (req, res) => {
+app.post('/analyze', async (req, res) => {
   const rawBody = req.body || {};
+
+  // Strict input validation
+  const fields = ['profession', 'budget', 'nationality', 'priorities', 'family', 'govtype'];
+  for (const field of fields) {
+    if (!rawBody[field]) {
+      return res.status(400).json({ error: `Missing required field: ${field}` });
+    }
+    if (typeof rawBody[field] !== 'string') {
+      return res.status(400).json({ error: `Invalid field type: ${field}` });
+    }
+    if (rawBody[field].length > 500) {
+      return res.status(400).json({ error: `Field too long: ${field}` });
+    }
+  }
+
   const nationality = sanitize(rawBody.nationality);
-  const age = sanitize(rawBody.age);
+  const age = sanitize(rawBody.age || '28');
   const profession = sanitize(rawBody.profession);
   const budget = sanitize(String(rawBody.budget || ''));
   const currency = sanitize(rawBody.currency || 'USD');
-  const languages = sanitize(rawBody.languages);
-  const reason = sanitize(rawBody.reason);
+  const languages = sanitize(rawBody.languages || 'English');
+  const reason = sanitize(rawBody.reason || 'Better career');
   const priorities = sanitize(rawBody.priorities);
   const family = sanitize(rawBody.family);
   const govtype = sanitize(rawBody.govtype);
-  const education = sanitize(rawBody.education);
-  const experience = sanitize(rawBody.experience);
-  const savings = sanitize(rawBody.savings);
-  const climate = sanitize(rawBody.climate);
-  const workStyle = sanitize(rawBody.workStyle);
-  const healthcare = sanitize(rawBody.healthcare);
+  const education = sanitize(rawBody.education || "Bachelor's Degree");
+  const experience = sanitize(rawBody.experience || '3-5 years');
+  const savings = sanitize(rawBody.savings || '$20,000 - $50,000');
+  const climate = sanitize(rawBody.climate || 'Mild');
+  const workStyle = sanitize(rawBody.workStyle || 'Office job');
+  const healthcare = sanitize(rawBody.healthcare || 'Universal healthcare');
   const additionalContext = sanitize(rawBody.additionalContext || '');
-
-  // Input Validation - Check all profile fields exist
-  if (!nationality || !age || !profession || !budget || !languages || !reason || 
-      !priorities || !family || !govtype || !education || !experience || 
-      !savings || !climate || !workStyle || !healthcare) {
-    return res.status(400).json({
-      error: 'All profile fields are required to generate a complete 24-topic settlement report.'
-    });
-  }
 
   const prompt = `You are SettleIQ, the world's premier AI immigration advisor for the Build with Gemini XPRIZE. A user wants to permanently settle abroad.
 
 USER PROFILE:
-- Nationality/Passport: ${nationality}
-- Age Range: ${age}
+- Passport Nationality: ${nationality}
+- User age: ${age} years old
 - Profession/Skill: ${profession}
 - Education Level: ${education}
 - Work Experience: ${experience}
@@ -138,7 +218,7 @@ CRITICAL REQUIREMENTS FOR YOUR RESPONSE:
 - Minimum 300 words per country section
 - Every metric must have an actual specific value — no placeholders, vague text, or TBD statements
 - Salary figures: specific monthly amounts for ${profession} in that country (gross and net after tax)
-- PR timeline: specific years with exact visa route name
+- PR timeline: specific years with exact visa route name calculated for a ${age} year old applicant
 - Citizenship timeline: specific years from arrival
 - Job market: name 5 actual companies hiring ${profession} in that country
 - Cost of living breakdown: rent + food + transport + utilities separately
@@ -148,13 +228,13 @@ CRITICAL REQUIREMENTS FOR YOUR RESPONSE:
   Best for lifestyle: [country]  
   Best for fastest PR: [country]
 - Do NOT use emoji for ratings — use text like Excellent (5/5) or Good (4/5) or numeric scores like 8/10
-- Parse any preferences in Additional Personal Context and factor them into country selection and analysis.
+- Factor age (${age}) specifically into PR points systems and residency qualification timelines.
 
 Recommend the TOP 3 countries for this person to settle permanently.
 
 Return ONLY valid JSON. No text outside JSON. Structure:
 {
-  "summary": "Detailed 2-3 sentence overview of analysis tailored to ${nationality} passport and user preferences.",
+  "summary": "Detailed 2-3 sentence overview of analysis tailored to ${nationality} passport, age ${age}, and user preferences.",
   "bestMatch": "Country Name",
   "rankedVerdict": {
     "bestForIncome": "Country Name — Brief reason",
@@ -272,21 +352,28 @@ Return ONLY valid JSON. No text outside JSON. Structure:
       parsedResult = { rawText: text };
     }
 
-    // Extract recommended country names for logging evidence
-    let recommendedNames = 'N/A';
-    if (parsedResult && parsedResult.countries && Array.isArray(parsedResult.countries)) {
-      recommendedNames = parsedResult.countries.map(c => c.name).join(', ');
-    }
-
-    // Log request as competition proof of production AI execution
-    logRequest({ nationality, profession, budget: `${budget} ${currency}`, recommendedCountries: recommendedNames });
-
     return res.json({ result: parsedResult });
 
   } catch (error) {
     console.error('Server error:', error.message);
     return res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Global error:', err.message);
+  res.status(500).json({ 
+    error: 'Something went wrong. Please try again.' 
+  });
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err.message);
 });
 
 const PORT = process.env.PORT || 3000;

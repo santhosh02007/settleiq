@@ -4,21 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SettleIQ — AI-Powered Global Immigration Advisor</title>
-  <meta name="description" content="Find the perfect country to settle in permanently. AI analysis of 50+ countries across safety, PR timelines, cost of living, and social acceptance.">
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="SettleIQ — AI-powered global immigration advisor. Find the perfect country to settle in permanently based on your profile, PR timelines, salary, and quality of life.">
+  <meta name="keywords" content="immigration advisor, settle abroad, PR timeline, citizenship, best country to live, move abroad">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="SettleIQ — Find Your Perfect Country">
+  <meta property="og:description" content="AI-powered immigration research for any passport. PR timelines, salary data, cost of living.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://settleiq-newb.onrender.com">
+  <link rel="canonical" href="https://settleiq-newb.onrender.com">
   
-  <!-- Inter Google Font -->
+  <!-- Preconnect & Inter Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Firebase Compat CDN Libraries (v10.12.0) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase Compat CDN Libraries (v10.12.0) with defer -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
 
-  <!-- PDF & Markdown Libraries -->
+  <!-- PDF & Markdown Libraries with defer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 
   <style>
     /* ==========================================================================
@@ -83,11 +92,6 @@
       color: #ffffff;
       text-decoration: none;
       letter-spacing: -0.5px;
-    }
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 16px;
     }
 
     /* HERO SECTION */
@@ -616,7 +620,7 @@
   <nav>
     <a href="#" class="nav-logo">SettleIQ</a>
     
-    <!-- NAVBAR AUTH UI CONTAINER (FIX 4) -->
+    <!-- NAVBAR AUTH UI CONTAINER -->
     <div id="authContainer" style="display:flex;align-items:center;gap:12px;">
       <button id="signInBtn" onclick="signInWithGoogle()"
         style="background:#000;color:#fff;border:none;
@@ -630,7 +634,7 @@
           style="display:flex;align-items:center;gap:10px;
           cursor:pointer;padding:6px 12px;border-radius:8px;
           border:1px solid #e5e5e5;background:#fff;">
-          <img id="userAvatar" src="" alt="avatar"
+          <img id="userAvatar" src="" alt="avatar" loading="lazy"
             style="width:32px;height:32px;border-radius:50%;
             object-fit:cover;">
           <span id="userName"
@@ -648,7 +652,7 @@
             style="padding:16px;border-bottom:1px solid #f0f0f0;
             background:#f9f9f9;">
             <div style="display:flex;align-items:center;gap:12px;">
-              <img id="dropdownAvatar" src="" alt=""
+              <img id="dropdownAvatar" src="" alt="" loading="lazy"
                 style="width:44px;height:44px;border-radius:50%;
                 object-fit:cover;">
               <div>
@@ -755,14 +759,55 @@
               <input type="hidden" id="nationalityValue" value="India" />
             </div>
 
-            <!-- 2. Age Range -->
+            <!-- 2. SPECIFIC AGE SELECTOR (FIX 3) -->
             <div class="form-group">
-              <label for="age">Age Range *</label>
+              <label for="age">Age *</label>
               <select id="age" required>
-                <option value="18-25">18–25 years</option>
-                <option value="26-35" selected>26–35 years</option>
-                <option value="36-45">36–45 years</option>
-                <option value="46+">46+ years</option>
+                <option value="">Select your age</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28" selected>28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+                <option value="32">32</option>
+                <option value="33">33</option>
+                <option value="34">34</option>
+                <option value="35">35</option>
+                <option value="36">36</option>
+                <option value="37">37</option>
+                <option value="38">38</option>
+                <option value="39">39</option>
+                <option value="40">40</option>
+                <option value="41">41</option>
+                <option value="42">42</option>
+                <option value="43">43</option>
+                <option value="44">44</option>
+                <option value="45">45</option>
+                <option value="46">46</option>
+                <option value="47">47</option>
+                <option value="48">48</option>
+                <option value="49">49</option>
+                <option value="50">50</option>
+                <option value="51">51</option>
+                <option value="52">52</option>
+                <option value="53">53</option>
+                <option value="54">54</option>
+                <option value="55">55</option>
+                <option value="56">56</option>
+                <option value="57">57</option>
+                <option value="58">58</option>
+                <option value="59">59</option>
+                <option value="60">60</option>
+                <option value="60+">60+</option>
               </select>
             </div>
 
@@ -1023,7 +1068,7 @@
     </div>
   </section>
 
-  <!-- MY REPORTS SECTION (FIX 3 - BELOW FORM) -->
+  <!-- MY REPORTS SECTION (BELOW FORM) -->
   <div id="myReportsSection" 
     style="display:none;max-width:700px;margin:40px auto;padding:0 20px;">
     <h2 style="font-size:24px;font-weight:700;margin-bottom:8px;">
@@ -1237,7 +1282,7 @@
       area.value = current ? `${current}. ${text}` : text;
     }
 
-    // NAV DROPDOWN TOGGLES (FIX 4)
+    // NAV DROPDOWN TOGGLES
     function toggleDropdown() {
       const dd = document.getElementById('profileDropdown');
       if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
@@ -1282,7 +1327,7 @@
       );
     }
 
-    // AUTH STATE LISTENER (FIX 4)
+    // AUTH STATE LISTENER
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
         document.getElementById('signInBtn').style.display = 'none';
@@ -1333,7 +1378,7 @@
       }
     }
 
-    // LOAD MY REPORTS FROM FIRESTORE (FIX 2)
+    // LOAD MY REPORTS FROM FIRESTORE
     function loadMyReports(uid) {
       console.log('Loading reports for:', uid);
       const section = document.getElementById('myReportsSection');
@@ -1533,13 +1578,19 @@
 
         currentAIResult = data.result;
         currentProfile = profile;
-        try { localStorage.setItem('settleiq_last_report', JSON.stringify({ result: data.result, profile })); } catch (e) {}
+
+        // SESSION STORAGE CACHING FOR PERFORMANCE
+        try { 
+          sessionStorage.setItem('lastReport', document.getElementById('result').innerHTML);
+          sessionStorage.setItem('lastProfile', JSON.stringify(profile));
+          sessionStorage.setItem('settleiq_last_report', JSON.stringify({ result: data.result, profile })); 
+        } catch (e) {}
 
         renderResults(data.result, profile);
         document.getElementById('result').style.display = 'block';
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
-        // FIX 1 — SAVE REPORT TO FIRESTORE IMMEDIATELY AFTER DISPLAYING RESULT
+        // SAVE REPORT TO FIRESTORE IMMEDIATELY AFTER DISPLAYING RESULT
         const user = firebase.auth().currentUser;
         if (user) {
           console.log('Saving report for user:', user.uid);
@@ -1576,7 +1627,7 @@
 
     function restoreCachedResult() {
       try {
-        const cached = localStorage.getItem('settleiq_last_report');
+        const cached = sessionStorage.getItem('settleiq_last_report');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && parsed.result) {
@@ -1817,7 +1868,7 @@
       table.innerHTML = html;
     }
 
-    // COMPLETE TEXT-BASED jsPDF REWRITE (UPDATED FOR BUDGET EXPENSES & CURRENCY)
+    // COMPLETE TEXT-BASED jsPDF REWRITE
     async function downloadPDF() {
       const btn = document.getElementById('downloadBtn');
       btn.textContent = 'Generating PDF...';
@@ -1908,6 +1959,7 @@
         y = 52;
         addHeading('Report Overview');
         addDataRow('Applicant Passport', currentProfile.nationality || 'Global');
+        addDataRow('Applicant Age', (currentProfile.age || '28') + ' years old');
         addDataRow('Profession', currentProfile.profession || 'Professional');
         addDataRow('Monthly Expenses (home country)', (currentProfile.budget || '0') + ' ' + (currentProfile.currency || 'USD'));
         addDataRow('Date Generated', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
@@ -2040,7 +2092,11 @@
       document.getElementById('result').style.display = 'none';
       currentAIResult = null;
       currentProfile = {};
-      try { localStorage.removeItem('settleiq_last_report'); } catch (e) {}
+      try { 
+        sessionStorage.removeItem('lastReport');
+        sessionStorage.removeItem('lastProfile');
+        sessionStorage.removeItem('settleiq_last_report');
+      } catch (e) {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       showToast("Form reset.");
     }
