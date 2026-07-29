@@ -1006,15 +1006,21 @@
               </select>
             </div>
 
-            <!-- 9. Language Skills -->
+            <!-- 9. Language Skills (Multi-Select Tag Input) -->
             <div class="form-group">
-              <label for="languages">Language Skills *</label>
-              <select id="languages" required>
-                <option value="English only" selected>English only</option>
-                <option value="English + 1 European language">English + 1 European language</option>
-                <option value="English + 1 Asian language">English + 1 Asian language</option>
-                <option value="Multilingual (3+ languages)">Multilingual (3+ languages)</option>
-              </select>
+              <label>Language Skills *</label>
+              <div class="custom-select-wrapper">
+                <div class="input-control custom-select-trigger" id="languageTrigger" onclick="toggleLanguageDropdown()" style="display:flex;flex-wrap:wrap;gap:6px;min-height:46px;align-items:center;padding:8px 12px;background:#fff;border:1px solid #e5e5e5;border-radius:8px;cursor:pointer;">
+                  <div id="languageTags" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;"></div>
+                  <span id="languagePlaceholder" style="color:#999;font-size:14px;display:none;">Select languages...</span>
+                  <span style="font-size: 12px; color: #666666; margin-left:auto;">▼</span>
+                </div>
+                <div class="custom-select-dropdown" id="languageDropdown">
+                  <input type="text" class="custom-select-search" id="languageSearch" placeholder="Search language (e.g. English, French, Hindi...)" oninput="filterLanguages(this.value)" onclick="event.stopPropagation()" />
+                  <div id="languageListOptions" style="max-height:220px;overflow-y:auto;"></div>
+                </div>
+              </div>
+              <input type="hidden" id="languages" name="languages" value="English" />
             </div>
 
             <!-- 10. Climate Preference -->
@@ -1471,7 +1477,15 @@
           const natDrop = document.getElementById('nationalityDropdown');
           if (natDrop) natDrop.classList.remove('open');
         }
+
+        if (!e.target.closest('#languageTrigger') && !e.target.closest('#languageDropdown')) {
+          const langDrop = document.getElementById('languageDropdown');
+          if (langDrop) langDrop.classList.remove('open');
+        }
       });
+
+      renderLanguageTags();
+      renderLanguageOptions(WORLD_LANGUAGES);
     });
 
     // AGE STEPPER FUNCTIONS
@@ -1771,6 +1785,100 @@
       document.getElementById('selectedNationalityText').innerHTML = `${c.flag} ${c.name}`;
       document.getElementById('nationalityValue').value = c.name;
       document.getElementById('nationalityDropdown').classList.remove('open');
+    }
+
+    // MULTI-SELECT LANGUAGE SKILLS FUNCTIONS & ALL MAJOR WORLD LANGUAGES
+    const WORLD_LANGUAGES = [
+      "English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi",
+      "Punjabi", "Urdu", "French", "German", "Spanish", "Portuguese", "Italian", "Dutch",
+      "Russian", "Mandarin", "Japanese", "Korean", "Arabic", "Turkish", "Swahili", "Polish",
+      "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Hebrew", "Thai", "Vietnamese",
+      "Indonesian", "Malay", "Persian/Farsi", "Gujarati", "Odia", "Assamese", "Sinhala",
+      "Nepali", "Burmese", "Tagalog/Filipino", "Romanian", "Hungarian", "Czech", "Ukrainian",
+      "Serbo-Croatian", "Bulgarian", "Afrikaans", "Amharic", "Kinyarwanda", "Zulu", "Xhosa"
+    ];
+
+    let selectedLanguages = ["English"];
+
+    function toggleLanguageDropdown() {
+      const dropdown = document.getElementById('languageDropdown');
+      if (dropdown) dropdown.classList.toggle('open');
+      if (dropdown && dropdown.classList.contains('open')) {
+        document.getElementById('languageSearch').focus();
+      }
+    }
+
+    function renderLanguageTags() {
+      const container = document.getElementById('languageTags');
+      const placeholder = document.getElementById('languagePlaceholder');
+      const hiddenInput = document.getElementById('languages');
+      if (!container) return;
+
+      container.innerHTML = '';
+      if (selectedLanguages.length === 0) {
+        if (placeholder) placeholder.style.display = 'inline';
+        if (hiddenInput) hiddenInput.value = '';
+      } else {
+        if (placeholder) placeholder.style.display = 'none';
+        if (hiddenInput) hiddenInput.value = selectedLanguages.join(', ');
+
+        selectedLanguages.forEach(lang => {
+          const chip = document.createElement('span');
+          chip.style.cssText = 'background:#000;color:#fff;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;';
+          chip.innerHTML = `${lang} <span onclick="removeLanguage('${lang}', event)" style="cursor:pointer;font-weight:700;margin-left:2px;font-size:14px;line-height:1;">×</span>`;
+          container.appendChild(chip);
+        });
+      }
+    }
+
+    function renderLanguageOptions(list) {
+      const container = document.getElementById('languageListOptions');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div style="padding: 12px; color: #888; font-size: 14px; text-align: center;">No language found</div>';
+        return;
+      }
+
+      list.forEach(lang => {
+        const isSelected = selectedLanguages.includes(lang);
+        const item = document.createElement('div');
+        item.style.cssText = 'padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; font-size: 14px;' + (isSelected ? 'background:#f5f5f5;font-weight:600;' : '');
+        item.innerHTML = `<span>${lang}</span> ${isSelected ? '<span style="color:#16a34a;font-weight:700;">✓</span>' : ''}`;
+        item.onclick = (e) => {
+          e.stopPropagation();
+          toggleSelectLanguage(lang);
+        };
+        container.appendChild(item);
+      });
+    }
+
+    function toggleSelectLanguage(lang) {
+      const idx = selectedLanguages.indexOf(lang);
+      if (idx > -1) {
+        selectedLanguages.splice(idx, 1);
+      } else {
+        selectedLanguages.push(lang);
+      }
+      renderLanguageTags();
+      filterLanguages(document.getElementById('languageSearch') ? document.getElementById('languageSearch').value : '');
+    }
+
+    function removeLanguage(lang, event) {
+      if (event) event.stopPropagation();
+      const idx = selectedLanguages.indexOf(lang);
+      if (idx > -1) {
+        selectedLanguages.splice(idx, 1);
+      }
+      renderLanguageTags();
+      filterLanguages(document.getElementById('languageSearch') ? document.getElementById('languageSearch').value : '');
+    }
+
+    function filterLanguages(searchTerm) {
+      const term = String(searchTerm !== undefined ? searchTerm : '').toLowerCase().trim();
+      const filtered = WORLD_LANGUAGES.filter(l => l.toLowerCase().includes(term));
+      renderLanguageOptions(filtered);
     }
 
     async function handleFormSubmit(event) {
@@ -2333,6 +2441,8 @@
       document.getElementById('settleForm').reset();
       selectNationality({ name: "India", flag: "🇮🇳", value: "Indian" });
       document.getElementById('age').value = 22;
+      selectedLanguages = ["English"];
+      renderLanguageTags();
       document.getElementById('result').style.display = 'none';
       currentAIResult = null;
       currentProfile = {};
