@@ -281,11 +281,11 @@ Return ONLY valid JSON. No text outside JSON. Structure:
     let isBusyError = false;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`Sending request to Gemini 2.0 Flash API (attempt ${attempt}/${maxRetries})...`);
+      console.log(`Sending request to Gemini 2.5 Flash API (attempt ${attempt}/${maxRetries})...`);
 
       try {
         apiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
