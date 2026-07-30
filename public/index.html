@@ -1708,6 +1708,7 @@
           const parsedInputs = card.dataset.allInputs ? JSON.parse(card.dataset.allInputs) : {};
           currentAIResult = parsedRes;
           currentProfile = parsedInputs;
+          window.currentReport = parsedRes;
           renderResults(parsedRes, parsedInputs);
           document.getElementById('result').style.display = 'block';
           document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
@@ -1936,6 +1937,7 @@
 
         currentAIResult = data.result;
         currentProfile = profile;
+        window.currentReport = data.result;
 
         // SESSION STORAGE CACHING FOR PERFORMANCE
         try { 
@@ -1992,6 +1994,7 @@
           if (parsed && parsed.result) {
             currentAIResult = parsed.result;
             currentProfile = parsed.profile || {};
+            window.currentReport = parsed.result;
             renderResults(parsed.result, parsed.profile || {});
             document.getElementById('result').style.display = 'block';
           }
@@ -2012,6 +2015,7 @@
 
     // RENDER RESULTS IN CLEAN KREA STYLE
     function renderResults(res, profile) {
+      window.currentReport = res;
       const container = document.getElementById('countryCardsContainer');
       container.innerHTML = '';
 
@@ -2230,211 +2234,365 @@
     // COMPLETE TEXT-BASED jsPDF REWRITE
     async function downloadPDF() {
       const btn = document.getElementById('downloadBtn');
-      btn.textContent = 'Generating PDF...';
-      btn.disabled = true;
+      if (btn) { btn.textContent = 'Generating PDF...'; btn.disabled = true; }
 
       try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
-        
-        const pageWidth = 210;
-        const pageHeight = 297;
         const margin = 15;
+        const pageWidth = 210;
         const maxWidth = pageWidth - (margin * 2);
         let y = 20;
+        let pageNum = 1;
 
-        function checkPageBreak(neededHeight) {
-          if (y + neededHeight > 275) {
+        function cleanStr(str) {
+          if (!str) return '';
+          return String(str)
+            .replace(/[^\x00-\x7F]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        }
+
+        function checkPage() {
+          if (y > 270) {
             doc.addPage();
+            pageNum++;
             y = 20;
+            addHeader();
           }
         }
 
-        function addHeading(text) {
-          const clean = cleanText(text);
-          if (!clean) return;
-          checkPageBreak(12);
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(0, 0, 0);
-          doc.text(clean, margin, y);
-          y += 8;
-        }
-
-        function addSubHeading(text) {
-          const clean = cleanText(text);
-          if (!clean) return;
-          checkPageBreak(10);
-          doc.setFontSize(11);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(50, 50, 50);
-          doc.text(clean, margin, y);
-          y += 6;
-        }
-
-        function addParagraph(text) {
-          const clean = cleanText(text);
-          if (!clean) return;
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(30, 30, 30);
-          const lines = doc.splitTextToSize(clean, maxWidth);
-          lines.forEach(line => {
-            checkPageBreak(5);
-            doc.text(line, margin, y);
-            y += 4.5;
-          });
-          y += 3;
-        }
-
-        function addDataRow(label, value) {
-          const cleanL = cleanText(label);
-          const cleanV = cleanText(value);
-          if (!cleanL) return;
-          checkPageBreak(6);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(80, 80, 80);
-          doc.text(cleanL + ':', margin, y);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(10, 10, 10);
-          doc.text(cleanV || 'N/A', margin + 65, y);
-          y += 5;
-        }
-
-        // 1. COVER PAGE / HEADER
-        doc.setFillColor(0, 0, 0);
-        doc.rect(0, 0, pageWidth, 40, 'F');
-        
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(255, 255, 255);
-        doc.text('SettleIQ', margin, 22);
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Global AI Settlement & Relocation Assessment', margin, 30);
-
-        y = 52;
-        addHeading('Report Overview');
-        addDataRow('Applicant Passport', currentProfile.nationality || 'Global');
-        addDataRow('Applicant Age', (currentProfile.age || '22') + ' years old');
-        addDataRow('Profession', currentProfile.profession || 'Professional');
-        addDataRow('Monthly Expenses (home country)', (currentProfile.budget || '0') + ' ' + (currentProfile.currency || 'USD'));
-        addDataRow('Date Generated', new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
-        if (currentProfile.additionalContext) {
-          addDataRow('Personal Preferences', currentProfile.additionalContext);
-        }
-        y += 6;
-
-        if (currentAIResult && currentAIResult.summary) {
-          addHeading('Executive Summary');
-          addParagraph(currentAIResult.summary);
-          y += 6;
-        }
-
-        // 2. DETAILED COUNTRY SECTIONS
-        if (currentAIResult && currentAIResult.countries) {
-          currentAIResult.countries.forEach((country, cIdx) => {
-            checkPageBreak(40);
-            doc.setDrawColor(200, 200, 200);
-            doc.line(margin, y, pageWidth - margin, y);
-            y += 8;
-
-            addHeading(`Option ${cIdx + 1}: ${country.name} (Match Score: ${country.matchScore || 90}/100)`);
-            if (country.budgetEquivalent) {
-              addDataRow('Your Budget Equivalent', country.budgetEquivalent);
-            }
-            addDataRow('Visa Pathway', country.visaPathway);
-            addDataRow('Gross Monthly Salary', country.salary ? country.salary.gross : 'N/A');
-            addDataRow('Income Tax Rate', country.salary ? country.salary.taxRate : 'N/A');
-            addDataRow('Net Take-Home Salary', country.salary ? country.salary.netTakeHome : 'N/A');
-            addDataRow('Monthly Cost of Living', country.costOfLiving ? country.costOfLiving.total : 'N/A');
-            addDataRow('Monthly Net Savings', country.monthlySavings);
-            addDataRow('PR Timeline & Route', country.prTimeline);
-            addDataRow('Citizenship Timeline', country.citizenshipTimeline);
-            addDataRow('Dual Citizenship', country.dualCitizenship);
-            addDataRow('GPI 2026 Safety Ranking', country.safety ? country.safety.gpiRanking : 'N/A');
-            addDataRow('Est. Relocation Cost', country.relocationCost);
-
-            if (country.hiringCompanies && country.hiringCompanies.length) {
-              addDataRow('Top Hiring Companies', country.hiringCompanies.join(', '));
-            }
-
-            y += 4;
-            if (country.jobMarket) {
-              addSubHeading('Job Market & Demand');
-              addParagraph(country.jobMarket);
-            }
-            if (country.visaProcess) {
-              addSubHeading('Visa Process & Requirements');
-              addParagraph(country.visaProcess);
-            }
-            if (country.healthcare) {
-              addSubHeading('Healthcare System');
-              addParagraph(country.healthcare);
-            }
-            if (country.personalizedReason) {
-              addSubHeading('Personalized Profile Fit');
-              addParagraph(country.personalizedReason);
-            }
-
-            if (country.pros && country.pros.length) {
-              addSubHeading('Key Advantages');
-              addParagraph(country.pros.join('; '));
-            }
-            if (country.cons && country.cons.length) {
-              addSubHeading('Considerations & Limitations');
-              addParagraph(country.cons.join('; '));
-            }
-            if (country.redFlags && country.redFlags.length) {
-              addSubHeading('Red Flags & Risks');
-              addParagraph(country.redFlags.join('; '));
-            }
-
-            y += 6;
-          });
-        }
-
-        // 3. RANKED VERDICT & FINAL RECOMMENDATION
-        if (currentAIResult && currentAIResult.rankedVerdict) {
-          addHeading('Ranked Verdict');
-          if (currentAIResult.rankedVerdict.bestForIncome) addDataRow('Best for Income', currentAIResult.rankedVerdict.bestForIncome);
-          if (currentAIResult.rankedVerdict.bestForLifestyle) addDataRow('Best for Lifestyle', currentAIResult.rankedVerdict.bestForLifestyle);
-          if (currentAIResult.rankedVerdict.bestForFastestPR) addDataRow('Best for Fastest PR', currentAIResult.rankedVerdict.bestForFastestPR);
-          y += 6;
-        }
-
-        if (currentAIResult && currentAIResult.finalVerdict) {
-          addHeading('Final Executive Verdict');
-          addParagraph(currentAIResult.finalVerdict);
-        }
-
-        // 4. ADD PAGE HEADERS & FOOTERS TO ALL PAGES
-        const totalPages = doc.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-          doc.setPage(i);
-          if (i > 1) {
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(120, 120, 120);
-            doc.text('SettleIQ — Global Settlement Assessment', margin, 12);
-            doc.line(margin, 14, pageWidth - margin, 14);
-          }
+        function addHeader() {
           doc.setFontSize(8);
           doc.setFont('helvetica', 'normal');
-          doc.setTextColor(120, 120, 120);
-          doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 20, pageHeight - 10);
+          doc.setTextColor(150);
+          doc.text('SettleIQ — AI Immigration Report', margin, 10);
+          doc.text('Page ' + pageNum, pageWidth - margin, 10, { align: 'right' });
+          doc.setTextColor(0);
         }
 
+        function addTitle(text, size) {
+          checkPage();
+          doc.setFontSize(size || 16);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0);
+          const lines = doc.splitTextToSize(cleanStr(text), maxWidth);
+          doc.text(lines, margin, y);
+          y += (lines.length * (size || 16) * 0.45) + 4;
+        }
+
+        function addSubtitle(text) {
+          checkPage();
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50);
+          const lines = doc.splitTextToSize(cleanStr(text), maxWidth);
+          doc.text(lines, margin, y);
+          y += (lines.length * 6) + 3;
+          doc.setTextColor(0);
+        }
+
+        function addBody(text) {
+          if (!text) return;
+          checkPage();
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60);
+          const lines = doc.splitTextToSize(cleanStr(text), maxWidth);
+          lines.forEach(line => {
+            checkPage();
+            doc.text(line, margin, y);
+            y += 5;
+          });
+          y += 2;
+          doc.setTextColor(0);
+        }
+
+        function addRow(label, value) {
+          checkPage();
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text(cleanStr(label) + ':', margin, y);
+          doc.setFont('helvetica', 'normal');
+          const valLines = doc.splitTextToSize(cleanStr(value), maxWidth - 55);
+          doc.text(valLines, margin + 55, y);
+          y += (valLines.length * 5) + 2;
+        }
+
+        function addDivider() {
+          checkPage();
+          doc.setDrawColor(200);
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 6;
+        }
+
+        function addBullet(text, color) {
+          checkPage();
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          if (color) doc.setTextColor(...color);
+          const lines = doc.splitTextToSize('• ' + cleanStr(text), maxWidth - 5);
+          lines.forEach(line => {
+            checkPage();
+            doc.text(line, margin + 3, y);
+            y += 5;
+          });
+          doc.setTextColor(0);
+        }
+
+        // ─── COVER PAGE ───
+        addHeader();
+        y = 40;
+        doc.setFontSize(28);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SettleIQ', margin, y);
+        y += 12;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80);
+        doc.text('AI-Powered Immigration Report', margin, y);
+        y += 10;
+        doc.setFontSize(11);
+        doc.text('Generated: ' + new Date().toLocaleDateString('en-IN', 
+          {day:'numeric', month:'long', year:'numeric'}), margin, y);
+        y += 20;
+        doc.setTextColor(0);
+
+        // Profile summary from form
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Your Profile', margin, y);
+        y += 8;
+        addDivider();
+
+        const fields = [
+          ['Nationality', document.getElementById('nationalityValue')?.value || document.getElementById('nationality')?.value],
+          ['Age', document.getElementById('age')?.value + ' years'],
+          ['Profession', document.getElementById('profession')?.value],
+          ['Education', document.getElementById('education')?.value],
+          ['Experience', document.getElementById('experience')?.value],
+          ['Monthly Expenses', document.getElementById('budget')?.value + 
+            ' ' + (document.getElementById('currency')?.value || 'INR')],
+          ['Savings', document.getElementById('savings')?.value],
+          ['Priority', document.getElementById('priorities')?.value],
+          ['Family', document.getElementById('family')?.value],
+          ['Work Style', document.getElementById('workStyle')?.value],
+          ['Climate', document.getElementById('climate')?.value],
+          ['Healthcare', document.getElementById('healthcare')?.value],
+        ];
+        fields.forEach(([label, value]) => {
+          if (value) addRow(label, value);
+        });
+
+        // ─── REPORT CONTENT ───
+        const report = window.currentReport;
+
+        if (!report) {
+          addDivider();
+          addBody('No report data found. Please generate a report first.');
+        } else {
+          // Summary
+          y += 8;
+          addDivider();
+          addTitle('Executive Summary', 14);
+          addBody(report.summary);
+
+          // Ranked verdict
+          if (report.rankedVerdict) {
+            y += 4;
+            addSubtitle('Quick Rankings');
+            addRow('Best for Income', report.rankedVerdict.bestForIncome);
+            addRow('Best for Lifestyle', report.rankedVerdict.bestForLifestyle);
+            addRow('Best for Fast PR', report.rankedVerdict.bestForFastestPR);
+          }
+
+          // Countries
+          if (report.countries && report.countries.length > 0) {
+            report.countries.forEach((country, idx) => {
+              doc.addPage();
+              pageNum++;
+              y = 20;
+              addHeader();
+
+              // Country header
+              addTitle((idx + 1) + '. ' + 
+                cleanStr(country.name) + 
+                ' — ' + country.matchScore + '/100', 16);
+              addRow('Visa Pathway', country.visaPathway);
+              addRow('Relocation Cost', country.relocationCost);
+              if (country.budgetEquivalent) 
+                addRow('Your Budget', country.budgetEquivalent);
+              addDivider();
+
+              // Salary
+              addSubtitle('Salary & Finances');
+              if (country.salary) {
+                addRow('Gross Monthly', country.salary.gross);
+                addRow('Net Take-Home', country.salary.netTakeHome);
+                addRow('Tax Rate', country.salary.taxRate);
+                addRow('Annual Net', country.salary.annualNet);
+              }
+              addRow('Monthly Savings', country.monthlySavings);
+              y += 3;
+
+              // Cost of living
+              addSubtitle('Cost of Living Breakdown');
+              if (country.costOfLiving) {
+                addRow('Rent', country.costOfLiving.rent);
+                addRow('Groceries', country.costOfLiving.groceries);
+                addRow('Transport', country.costOfLiving.transport);
+                addRow('Utilities', country.costOfLiving.utilities);
+                addRow('TOTAL', country.costOfLiving.total);
+              }
+              y += 3;
+
+              // Immigration
+              addSubtitle('Immigration Details');
+              addRow('PR Timeline', country.prTimeline);
+              addRow('Citizenship', country.citizenshipTimeline);
+              addRow('Dual Citizenship', country.dualCitizenship);
+              addRow('Language Test', country.languageTest);
+              y += 3;
+
+              // Safety
+              addSubtitle('Safety & Security');
+              if (country.safety) {
+                addRow('GPI Ranking', country.safety.gpiRanking);
+                addRow('Crime Level', country.safety.crimeLevel);
+                addBody(country.safety.foreignerSafety);
+              }
+
+              // Job market
+              addSubtitle('Job Market');
+              addBody(country.jobMarket);
+              if (country.hiringCompanies && country.hiringCompanies.length) {
+                addRow('Top Companies', country.hiringCompanies.join(', '));
+              }
+
+              // More details
+              addSubtitle('Healthcare');
+              addBody(country.healthcare);
+
+              addSubtitle('Climate & Weather');
+              addBody(country.climate);
+
+              addSubtitle('Language');
+              addBody(country.language);
+
+              addSubtitle('Expat Community');
+              addBody(country.homeCommunity);
+
+              addSubtitle('Work-Life Balance');
+              addBody(country.workLifeBalance);
+              addRow('Leave Policy', country.leavePolicy);
+
+              addSubtitle('Taxes');
+              addBody(country.taxes);
+
+              addSubtitle('Political Stability & War Risk');
+              addBody(country.politicalStability);
+              addRow('War Risk', country.warRisk);
+
+              // Scores
+              if (country.scores) {
+                addSubtitle('Score Breakdown');
+                Object.entries(country.scores).forEach(([k, v]) => {
+                  addRow(k.charAt(0).toUpperCase() + k.slice(1), v + '/10');
+                });
+              }
+
+              // Pros
+              if (country.pros && country.pros.length) {
+                addSubtitle('Key Advantages');
+                country.pros.forEach(p => addBullet(p, [0, 120, 0]));
+              }
+
+              // Cons
+              if (country.cons && country.cons.length) {
+                addSubtitle('Considerations');
+                country.cons.forEach(c => addBullet(c, [150, 100, 0]));
+              }
+
+              // Red flags
+              if (country.redFlags && country.redFlags.length) {
+                addSubtitle('Red Flags');
+                country.redFlags.forEach(r => addBullet(r, [180, 0, 0]));
+              }
+
+              // Personalized reason
+              addSubtitle('Why This Country For You');
+              addBody(country.personalizedReason);
+            });
+          }
+
+          // Comparison table
+          if (report.comparisonTable) {
+            doc.addPage();
+            pageNum++;
+            y = 20;
+            addHeader();
+            addTitle('Side-by-Side Comparison', 14);
+            addDivider();
+
+            const factors = report.comparisonTable.factors || [];
+            const countryData = report.comparisonTable.data || {};
+            const countryNames = Object.keys(countryData);
+
+            factors.forEach((factor, i) => {
+              checkPage();
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'bold');
+              doc.text(cleanStr(factor), margin, y);
+              y += 5;
+              doc.setFont('helvetica', 'normal');
+              countryNames.forEach(cName => {
+                const val = countryData[cName] && countryData[cName][i] ? 
+                  countryData[cName][i] : 'N/A';
+                checkPage();
+                doc.text('  ' + cleanStr(cName) + ': ' + cleanStr(val), 
+                  margin + 5, y);
+                y += 5;
+              });
+              y += 2;
+            });
+          }
+
+          // Runner ups
+          if (report.runnerUps && report.runnerUps.length) {
+            addDivider();
+            addTitle('Runner-Up Alternatives', 13);
+            report.runnerUps.forEach(r => {
+              addBullet(cleanStr(r.name) + ' — ' + cleanStr(r.briefReason));
+            });
+          }
+
+          // Final verdict
+          doc.addPage();
+          pageNum++;
+          y = 20;
+          addHeader();
+          addTitle('Final Recommendation', 16);
+          addDivider();
+          addBody(report.finalVerdict);
+        }
+
+        // Footer on last page
+        y += 10;
+        addDivider();
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text('SettleIQ — Powered by Google Gemini AI', margin, y);
+        doc.text('Not legal or immigration advice. Consult a certified lawyer.', 
+          margin, y + 5);
+
         doc.save('SettleIQ_Report.pdf');
-        showToast("PDF report downloaded cleanly!");
+
       } catch (err) {
-        alert('PDF error: ' + err.message);
+        console.error('PDF error:', err);
+        alert('PDF generation failed: ' + err.message);
       }
 
-      btn.textContent = 'Download PDF Report';
-      btn.disabled = false;
+      if (btn) { btn.textContent = 'Download PDF Report'; btn.disabled = false; }
     }
 
     function shareReport() {
