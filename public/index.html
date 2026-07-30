@@ -2231,7 +2231,7 @@
       table.innerHTML = html;
     }
 
-    // COMPLETE TEXT-BASED jsPDF REWRITE
+    // COMPLETE TEXT-BASED jsPDF REWRITE — DETAILED PROFESSIONAL REPORT
     async function downloadPDF() {
       const btn = document.getElementById('downloadBtn');
       if (btn) { btn.textContent = 'Generating PDF...'; btn.disabled = true; }
@@ -2245,345 +2245,515 @@
         let y = 20;
         let pageNum = 1;
 
-        function cleanStr(str) {
+        function clean(str) {
           if (!str) return '';
-          return String(str)
-            .replace(/[^\x00-\x7F]/g, '')
-            .replace(/\s+/g, ' ')
-            .trim();
+          return String(str).replace(/[^\x00-\x7F]/g, '').replace(/\s+/g, ' ').trim();
         }
 
-        function checkPage() {
-          if (y > 270) {
+        function checkPage(needed) {
+          if (y + (needed || 8) > 275) {
             doc.addPage();
             pageNum++;
             y = 20;
-            addHeader();
+            drawPageHeader();
           }
         }
 
-        function addHeader() {
+        function drawPageHeader() {
           doc.setFontSize(8);
           doc.setFont('helvetica', 'normal');
-          doc.setTextColor(150);
+          doc.setTextColor(160, 160, 160);
           doc.text('SettleIQ — AI Immigration Report', margin, 10);
           doc.text('Page ' + pageNum, pageWidth - margin, 10, { align: 'right' });
-          doc.setTextColor(0);
+          doc.setTextColor(0, 0, 0);
         }
 
-        function addTitle(text, size) {
-          checkPage();
-          doc.setFontSize(size || 16);
+        function drawDivider(color) {
+          checkPage(4);
+          doc.setDrawColor(color || 220, color || 220, color || 220);
+          doc.line(margin, y, pageWidth - margin, y);
+          y += 5;
+        }
+
+        function drawSectionTitle(text, r, g, b) {
+          checkPage(10);
+          doc.setFillColor(r || 17, g || 17, b || 17);
+          doc.rect(margin, y - 4, maxWidth, 9, 'F');
+          doc.setFontSize(11);
           doc.setFont('helvetica', 'bold');
-          doc.setTextColor(0);
-          const lines = doc.splitTextToSize(cleanStr(text), maxWidth);
-          doc.text(lines, margin, y);
-          y += (lines.length * (size || 16) * 0.45) + 4;
+          doc.setTextColor(255, 255, 255);
+          doc.text(clean(text), margin + 3, y + 2);
+          doc.setTextColor(0, 0, 0);
+          y += 10;
         }
 
-        function addSubtitle(text) {
-          checkPage();
-          doc.setFontSize(12);
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(50);
-          const lines = doc.splitTextToSize(cleanStr(text), maxWidth);
-          doc.text(lines, margin, y);
-          y += (lines.length * 6) + 3;
-          doc.setTextColor(0);
-        }
-
-        function addBody(text) {
-          if (!text) return;
-          checkPage();
+        function drawSubTitle(text) {
+          checkPage(8);
           doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text(clean(text), margin, y);
+          y += 6;
+          doc.setTextColor(0, 0, 0);
+        }
+
+        function drawBody(text) {
+          if (!text) return;
+          checkPage(6);
+          doc.setFontSize(9.5);
           doc.setFont('helvetica', 'normal');
-          doc.setTextColor(60);
-          const lines = doc.splitTextToSize(cleanStr(text), maxWidth);
+          doc.setTextColor(70, 70, 70);
+          const lines = doc.splitTextToSize(clean(text), maxWidth);
           lines.forEach(line => {
-            checkPage();
+            checkPage(5);
             doc.text(line, margin, y);
             y += 5;
           });
-          y += 2;
-          doc.setTextColor(0);
+          y += 1;
+          doc.setTextColor(0, 0, 0);
         }
 
-        function addRow(label, value) {
-          checkPage();
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'bold');
-          doc.text(cleanStr(label) + ':', margin, y);
+        function drawRow(label, value, highlight) {
+          checkPage(7);
+          const valStr = clean(value || 'N/A');
+          const labelStr = clean(label);
+          doc.setFontSize(9.5);
+
+          if (highlight) {
+            doc.setFillColor(240, 253, 244);
+            doc.rect(margin, y - 4, maxWidth, 7, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(22, 101, 52);
+          } else {
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(80, 80, 80);
+          }
+
+          doc.text(labelStr, margin + 2, y);
           doc.setFont('helvetica', 'normal');
-          const valLines = doc.splitTextToSize(cleanStr(value), maxWidth - 55);
-          doc.text(valLines, margin + 55, y);
-          y += (valLines.length * 5) + 2;
+
+          if (highlight) {
+            doc.setTextColor(21, 128, 61);
+          } else {
+            doc.setTextColor(17, 17, 17);
+          }
+
+          const valLines = doc.splitTextToSize(valStr, maxWidth - 70);
+          doc.text(valLines, pageWidth - margin - 2, y, { align: 'right' });
+
+          doc.setTextColor(200, 200, 200);
+          doc.line(margin, y + 2, pageWidth - margin, y + 2);
+          doc.setTextColor(0, 0, 0);
+          y += 7;
         }
 
-        function addDivider() {
-          checkPage();
-          doc.setDrawColor(200);
-          doc.line(margin, y, pageWidth - margin, y);
-          y += 6;
-        }
-
-        function addBullet(text, color) {
-          checkPage();
-          doc.setFontSize(10);
+        function drawBullet(text, r, g, b) {
+          checkPage(6);
+          doc.setFontSize(9.5);
           doc.setFont('helvetica', 'normal');
-          if (color) doc.setTextColor(...color);
-          const lines = doc.splitTextToSize('• ' + cleanStr(text), maxWidth - 5);
+          doc.setTextColor(r || 0, g || 0, b || 0);
+          const lines = doc.splitTextToSize('• ' + clean(text), maxWidth - 6);
           lines.forEach(line => {
-            checkPage();
+            checkPage(5);
             doc.text(line, margin + 3, y);
             y += 5;
           });
-          doc.setTextColor(0);
+          doc.setTextColor(0, 0, 0);
         }
 
-        // ─── COVER PAGE ───
-        addHeader();
-        y = 40;
-        doc.setFontSize(28);
-        doc.setFont('helvetica', 'bold');
-        doc.text('SettleIQ', margin, y);
-        y += 12;
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(80);
-        doc.text('AI-Powered Immigration Report', margin, y);
-        y += 10;
-        doc.setFontSize(11);
-        doc.text('Generated: ' + new Date().toLocaleDateString('en-IN', 
-          {day:'numeric', month:'long', year:'numeric'}), margin, y);
-        y += 20;
-        doc.setTextColor(0);
+        function drawBadge(label, value, x, w) {
+          doc.setFillColor(245, 245, 245);
+          doc.roundedRect(x, y, w, 14, 2, 2, 'F');
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 100, 100);
+          doc.text(clean(label), x + 3, y + 5);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(17, 17, 17);
+          doc.text(clean(value || 'N/A'), x + 3, y + 11);
+        }
 
-        // Profile summary from form
+        // ── COVER PAGE ──────────────────────────────────────────────
+        drawPageHeader();
+        y = 35;
+
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, 0, 210, 60, 'F');
+        doc.setFontSize(30);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('SettleIQ', margin, 30);
         doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Your Profile', margin, y);
-        y += 8;
-        addDivider();
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(180, 180, 180);
+        doc.text('AI-Powered Global Immigration Report', margin, 42);
+        doc.setFontSize(10);
+        doc.setTextColor(120, 120, 120);
+        doc.text('Generated: ' + new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), margin, 53);
 
+        y = 75;
+        doc.setTextColor(0, 0, 0);
+
+        // ── PROFILE SECTION ─────────────────────────────────────────
+        drawSectionTitle('Your Settlement Profile');
+        y += 2;
+
+        const profile = currentProfile || {};
         const fields = [
-          ['Nationality', document.getElementById('nationalityValue')?.value || document.getElementById('nationality')?.value],
-          ['Age', document.getElementById('age')?.value + ' years'],
-          ['Profession', document.getElementById('profession')?.value],
-          ['Education', document.getElementById('education')?.value],
-          ['Experience', document.getElementById('experience')?.value],
-          ['Monthly Expenses', document.getElementById('budget')?.value + 
-            ' ' + (document.getElementById('currency')?.value || 'INR')],
-          ['Savings', document.getElementById('savings')?.value],
-          ['Priority', document.getElementById('priorities')?.value],
-          ['Family', document.getElementById('family')?.value],
-          ['Work Style', document.getElementById('workStyle')?.value],
-          ['Climate', document.getElementById('climate')?.value],
-          ['Healthcare', document.getElementById('healthcare')?.value],
+          ['Passport Nationality', profile.nationality],
+          ['Age', profile.age ? profile.age + ' years' : null],
+          ['Gender', profile.gender],
+          ['Profession', profile.profession],
+          ['Education', profile.education],
+          ['Work Experience', profile.experience],
+          ['Monthly Expenses', profile.budget ? profile.budget + ' ' + (profile.currency || 'INR') : null],
+          ['Current Savings', profile.savings],
+          ['Work Style', profile.workStyle],
+          ['Language Skills', profile.languages],
+          ['Climate Preference', profile.climate],
+          ['Healthcare Priority', profile.healthcare],
+          ['Reason for Moving', profile.reason],
+          ['Top Priority', profile.priorities],
+          ['Family Situation', profile.family],
+          ['Government Preference', profile.govtype],
         ];
-        fields.forEach(([label, value]) => {
-          if (value) addRow(label, value);
-        });
+        fields.forEach(([label, val]) => { if (val) drawRow(label, val); });
 
-        // ─── REPORT CONTENT ───
+        if (profile.additionalContext) {
+          y += 2;
+          drawSubTitle('Additional Context');
+          drawBody(profile.additionalContext);
+        }
+
+        y += 4;
+        drawDivider();
+
+        // ── REPORT CONTENT ──────────────────────────────────────────
         const report = window.currentReport;
-
         if (!report) {
-          addDivider();
-          addBody('No report data found. Please generate a report first.');
+          drawBody('No report data found. Please generate a report first.');
         } else {
-          // Summary
-          y += 8;
-          addDivider();
-          addTitle('Executive Summary', 14);
-          addBody(report.summary);
 
-          // Ranked verdict
+          // SUMMARY
+          drawSectionTitle('Executive Summary');
+          y += 2;
+          drawBody(report.summary);
+          y += 4;
+
+          // RANKED VERDICT BADGES
           if (report.rankedVerdict) {
-            y += 4;
-            addSubtitle('Quick Rankings');
-            addRow('Best for Income', report.rankedVerdict.bestForIncome);
-            addRow('Best for Lifestyle', report.rankedVerdict.bestForLifestyle);
-            addRow('Best for Fast PR', report.rankedVerdict.bestForFastestPR);
+            checkPage(22);
+            drawSubTitle('Quick Rankings');
+            const bw = (maxWidth - 8) / 3;
+            drawBadge('Best for Income', report.rankedVerdict.bestForIncome, margin, bw);
+            drawBadge('Best for Lifestyle', report.rankedVerdict.bestForLifestyle, margin + bw + 4, bw);
+            drawBadge('Best for Fastest PR', report.rankedVerdict.bestForFastestPR, margin + (bw + 4) * 2, bw);
+            y += 20;
           }
 
-          // Countries
-          if (report.countries && report.countries.length > 0) {
-            report.countries.forEach((country, idx) => {
-              doc.addPage();
-              pageNum++;
-              y = 20;
-              addHeader();
-
-              // Country header
-              addTitle((idx + 1) + '. ' + 
-                cleanStr(country.name) + 
-                ' — ' + country.matchScore + '/100', 16);
-              addRow('Visa Pathway', country.visaPathway);
-              addRow('Relocation Cost', country.relocationCost);
-              if (country.budgetEquivalent) 
-                addRow('Your Budget', country.budgetEquivalent);
-              addDivider();
-
-              // Salary
-              addSubtitle('Salary & Finances');
-              if (country.salary) {
-                addRow('Gross Monthly', country.salary.gross);
-                addRow('Net Take-Home', country.salary.netTakeHome);
-                addRow('Tax Rate', country.salary.taxRate);
-                addRow('Annual Net', country.salary.annualNet);
-              }
-              addRow('Monthly Savings', country.monthlySavings);
-              y += 3;
-
-              // Cost of living
-              addSubtitle('Cost of Living Breakdown');
-              if (country.costOfLiving) {
-                addRow('Rent', country.costOfLiving.rent);
-                addRow('Groceries', country.costOfLiving.groceries);
-                addRow('Transport', country.costOfLiving.transport);
-                addRow('Utilities', country.costOfLiving.utilities);
-                addRow('TOTAL', country.costOfLiving.total);
-              }
-              y += 3;
-
-              // Immigration
-              addSubtitle('Immigration Details');
-              addRow('PR Timeline', country.prTimeline);
-              addRow('Citizenship', country.citizenshipTimeline);
-              addRow('Dual Citizenship', country.dualCitizenship);
-              addRow('Language Test', country.languageTest);
-              y += 3;
-
-              // Safety
-              addSubtitle('Safety & Security');
-              if (country.safety) {
-                addRow('GPI Ranking', country.safety.gpiRanking);
-                addRow('Crime Level', country.safety.crimeLevel);
-                addBody(country.safety.foreignerSafety);
-              }
-
-              // Job market
-              addSubtitle('Job Market');
-              addBody(country.jobMarket);
-              if (country.hiringCompanies && country.hiringCompanies.length) {
-                addRow('Top Companies', country.hiringCompanies.join(', '));
-              }
-
-              // More details
-              addSubtitle('Healthcare');
-              addBody(country.healthcare);
-
-              addSubtitle('Climate & Weather');
-              addBody(country.climate);
-
-              addSubtitle('Language');
-              addBody(country.language);
-
-              addSubtitle('Expat Community');
-              addBody(country.homeCommunity);
-
-              addSubtitle('Work-Life Balance');
-              addBody(country.workLifeBalance);
-              addRow('Leave Policy', country.leavePolicy);
-
-              addSubtitle('Taxes');
-              addBody(country.taxes);
-
-              addSubtitle('Political Stability & War Risk');
-              addBody(country.politicalStability);
-              addRow('War Risk', country.warRisk);
-
-              // Scores
-              if (country.scores) {
-                addSubtitle('Score Breakdown');
-                Object.entries(country.scores).forEach(([k, v]) => {
-                  addRow(k.charAt(0).toUpperCase() + k.slice(1), v + '/10');
-                });
-              }
-
-              // Pros
-              if (country.pros && country.pros.length) {
-                addSubtitle('Key Advantages');
-                country.pros.forEach(p => addBullet(p, [0, 120, 0]));
-              }
-
-              // Cons
-              if (country.cons && country.cons.length) {
-                addSubtitle('Considerations');
-                country.cons.forEach(c => addBullet(c, [150, 100, 0]));
-              }
-
-              // Red flags
-              if (country.redFlags && country.redFlags.length) {
-                addSubtitle('Red Flags');
-                country.redFlags.forEach(r => addBullet(r, [180, 0, 0]));
-              }
-
-              // Personalized reason
-              addSubtitle('Why This Country For You');
-              addBody(country.personalizedReason);
-            });
-          }
-
-          // Comparison table
-          if (report.comparisonTable) {
+          // ── COUNTRY CARDS ────────────────────────────────────────
+          const countries = report.countries || [];
+          countries.forEach((country, idx) => {
             doc.addPage();
             pageNum++;
             y = 20;
-            addHeader();
-            addTitle('Side-by-Side Comparison', 14);
-            addDivider();
+            drawPageHeader();
+
+            // Country Header Bar
+            doc.setFillColor(17, 17, 17);
+            doc.rect(0, y - 6, 210, 22, 'F');
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text((idx + 1) + '. ' + clean(country.name), margin, y + 6);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text(String(country.matchScore || '?') + '/100', pageWidth - margin, y + 8, { align: 'right' });
+            y += 22;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(120, 120, 120);
+            doc.text('Visa Pathway: ' + clean(country.visaPathway || 'Skilled Work Visa'), margin, y);
+            y += 8;
+            doc.setTextColor(0, 0, 0);
+
+            // Budget Equivalent (green highlight)
+            if (country.budgetEquivalent) {
+              checkPage(10);
+              doc.setFillColor(240, 253, 244);
+              doc.rect(margin, y - 2, maxWidth, 9, 'F');
+              doc.setFontSize(9);
+              doc.setFont('helvetica', 'bold');
+              doc.setTextColor(22, 101, 52);
+              doc.text('Your Budget Equivalent:', margin + 2, y + 4);
+              const bLines = doc.splitTextToSize(clean(country.budgetEquivalent), maxWidth - 55);
+              doc.setFont('helvetica', 'normal');
+              doc.text(bLines, pageWidth - margin - 2, y + 4, { align: 'right' });
+              y += 12;
+              doc.setTextColor(0, 0, 0);
+            }
+
+            drawDivider();
+
+            // SALARY & FINANCES
+            drawSectionTitle('Salary & Finances', 30, 30, 30);
+            if (country.salary) {
+              drawRow('Gross Monthly Salary', country.salary.gross);
+              drawRow('Income Tax Rate', country.salary.taxRate);
+              drawRow('Net Monthly Take-Home', country.salary.netTakeHome);
+              drawRow('Annual Net Salary', country.salary.annualNet);
+            }
+            drawRow('Est. Monthly Net Savings', country.monthlySavings, true);
+            y += 3;
+
+            // COST OF LIVING
+            drawSectionTitle('Cost of Living Breakdown', 30, 30, 30);
+            if (country.costOfLiving) {
+              drawRow('Rent', country.costOfLiving.rent);
+              drawRow('Groceries', country.costOfLiving.groceries);
+              drawRow('Transport', country.costOfLiving.transport);
+              drawRow('Utilities', country.costOfLiving.utilities);
+              drawRow('Total Monthly Cost', country.costOfLiving.total);
+            }
+            y += 3;
+
+            // IMMIGRATION
+            drawSectionTitle('Immigration & Citizenship', 30, 30, 30);
+            drawRow('PR Timeline & Route', country.prTimeline);
+            drawRow('Citizenship Timeline', country.citizenshipTimeline);
+            drawRow('Dual Citizenship', country.dualCitizenship);
+            drawRow('Language Test Required', country.languageTest);
+            drawRow('Est. Relocation Cost', country.relocationCost);
+            y += 3;
+
+            // SAFETY
+            drawSectionTitle('Safety & Security', 30, 30, 30);
+            if (country.safety) {
+              drawRow('GPI 2026 Safety Ranking', country.safety.gpiRanking);
+              drawRow('Crime Level', country.safety.crimeLevel);
+              drawBody(country.safety.foreignerSafety);
+            }
+            y += 3;
+
+            // JOB MARKET
+            drawSectionTitle('Job Market & Demand', 30, 30, 30);
+            drawBody(country.jobMarket);
+            if (country.hiringCompanies && country.hiringCompanies.length) {
+              drawSubTitle('Top Hiring Companies:');
+              drawBody(country.hiringCompanies.join(' · '));
+            }
+            y += 3;
+
+            // MORE DETAIL SECTIONS
+            drawSectionTitle('Work-Life Balance & Leave', 30, 30, 30);
+            drawBody(country.workLifeBalance);
+            drawRow('Leave Policy', country.leavePolicy);
+            y += 3;
+
+            drawSectionTitle('Healthcare System', 30, 30, 30);
+            drawBody(country.healthcare);
+            y += 3;
+
+            drawSectionTitle('Climate & Weather', 30, 30, 30);
+            drawBody(country.climate);
+            y += 3;
+
+            drawSectionTitle('Language & Local Integration', 30, 30, 30);
+            drawBody(country.language);
+            y += 3;
+
+            drawSectionTitle('Expat Community & Culture', 30, 30, 30);
+            drawBody(country.homeCommunity);
+            y += 3;
+
+            drawSectionTitle('Taxes, Transport & Pension', 30, 30, 30);
+            drawBody(country.taxes);
+            drawBody(country.transport);
+            drawBody(country.retirement);
+            y += 3;
+
+            drawSectionTitle('Political Stability & War Risk', 30, 30, 30);
+            drawBody(country.politicalStability);
+            drawRow('War Risk', country.warRisk);
+            y += 3;
+
+            drawSectionTitle('Why This Country For You', 30, 30, 30);
+            drawBody(country.personalizedReason);
+            y += 3;
+
+            // SCORES
+            if (country.scores) {
+              checkPage(20);
+              drawSectionTitle('Score Breakdown', 30, 30, 30);
+              const scoreKeys = Object.keys(country.scores);
+              const sw = (maxWidth - (scoreKeys.length - 1) * 3) / scoreKeys.length;
+              scoreKeys.forEach((k, si) => {
+                const score = country.scores[k];
+                const sx = margin + si * (sw + 3);
+                doc.setFillColor(245, 245, 245);
+                doc.roundedRect(sx, y, sw, 16, 2, 2, 'F');
+                doc.setFontSize(7.5);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100, 100, 100);
+                doc.text(clean(k.charAt(0).toUpperCase() + k.slice(1)), sx + 2, y + 5);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(17, 17, 17);
+                doc.text(String(score) + '/10', sx + 2, y + 13);
+              });
+              y += 22;
+              doc.setTextColor(0, 0, 0);
+            }
+
+            // PROS / CONS / RED FLAGS
+            checkPage(30);
+            const colW = (maxWidth - 8) / 3;
+
+            doc.setFillColor(240, 253, 244);
+            doc.rect(margin, y, colW, 6, 'F');
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(22, 101, 52);
+            doc.text('Key Advantages', margin + 2, y + 4);
+
+            doc.setFillColor(249, 249, 249);
+            doc.rect(margin + colW + 4, y, colW, 6, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.text('Considerations', margin + colW + 6, y + 4);
+
+            doc.setFillColor(254, 242, 242);
+            doc.rect(margin + (colW + 4) * 2, y, colW, 6, 'F');
+            doc.setTextColor(185, 28, 28);
+            doc.text('Red Flags & Risks', margin + (colW + 4) * 2 + 2, y + 4);
+
+            y += 9;
+            doc.setTextColor(0, 0, 0);
+
+            const pros = country.pros || [];
+            const cons = country.cons || [];
+            const flags = country.redFlags || [];
+            const maxItems = Math.max(pros.length, cons.length, flags.length);
+
+            for (let i = 0; i < maxItems; i++) {
+              checkPage(6);
+              doc.setFontSize(9);
+              doc.setFont('helvetica', 'normal');
+
+              if (pros[i]) {
+                doc.setTextColor(22, 101, 52);
+                const pl = doc.splitTextToSize('+ ' + clean(pros[i]), colW - 2);
+                doc.text(pl[0], margin + 2, y);
+              }
+              if (cons[i]) {
+                doc.setTextColor(100, 100, 100);
+                const cl = doc.splitTextToSize('- ' + clean(cons[i]), colW - 2);
+                doc.text(cl[0], margin + colW + 6, y);
+              }
+              if (flags[i]) {
+                doc.setTextColor(185, 28, 28);
+                const fl = doc.splitTextToSize('! ' + clean(flags[i]), colW - 2);
+                doc.text(fl[0], margin + (colW + 4) * 2 + 2, y);
+              }
+              y += 6;
+            }
+            doc.setTextColor(0, 0, 0);
+            y += 6;
+          });
+
+          // ── COMPARISON TABLE ─────────────────────────────────────
+          if (report.comparisonTable && report.comparisonTable.data) {
+            doc.addPage();
+            pageNum++;
+            y = 20;
+            drawPageHeader();
+            drawSectionTitle('Side-by-Side Factor Comparison');
+            y += 2;
 
             const factors = report.comparisonTable.factors || [];
-            const countryData = report.comparisonTable.data || {};
-            const countryNames = Object.keys(countryData);
+            const cData = report.comparisonTable.data || {};
+            const cNames = Object.keys(cData);
+            const colCount = cNames.length + 1;
+            const cw = maxWidth / colCount;
 
-            factors.forEach((factor, i) => {
-              checkPage();
-              doc.setFontSize(10);
+            // Table header
+            doc.setFillColor(17, 17, 17);
+            doc.rect(margin, y, maxWidth, 8, 'F');
+            doc.setFontSize(8.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text('Factor', margin + 2, y + 5.5);
+            cNames.forEach((cn, ci) => {
+              doc.text(clean(cn), margin + cw * (ci + 1) + 2, y + 5.5);
+            });
+            y += 10;
+
+            // Table rows
+            factors.forEach((factor, fi) => {
+              checkPage(8);
+              const rowBg = fi % 2 === 0 ? [255, 255, 255] : [249, 249, 249];
+              doc.setFillColor(...rowBg);
+              doc.rect(margin, y - 3, maxWidth, 7, 'F');
+
+              doc.setFontSize(8.5);
               doc.setFont('helvetica', 'bold');
-              doc.text(cleanStr(factor), margin, y);
-              y += 5;
+              doc.setTextColor(60, 60, 60);
+              doc.text(clean(factor), margin + 2, y + 2);
+
               doc.setFont('helvetica', 'normal');
-              countryNames.forEach(cName => {
-                const val = countryData[cName] && countryData[cName][i] ? 
-                  countryData[cName][i] : 'N/A';
-                checkPage();
-                doc.text('  ' + cleanStr(cName) + ': ' + cleanStr(val), 
-                  margin + 5, y);
-                y += 5;
+              doc.setTextColor(17, 17, 17);
+              cNames.forEach((cn, ci) => {
+                const val = cData[cn] && cData[cn][fi] ? clean(cData[cn][fi]) : 'N/A';
+                doc.text(val, margin + cw * (ci + 1) + 2, y + 2);
               });
-              y += 2;
+              y += 7;
             });
+            y += 6;
           }
 
-          // Runner ups
+          // ── RUNNER UPS ───────────────────────────────────────────
           if (report.runnerUps && report.runnerUps.length) {
-            addDivider();
-            addTitle('Runner-Up Alternatives', 13);
+            checkPage(20);
+            drawSectionTitle('Runner-Up Alternatives');
             report.runnerUps.forEach(r => {
-              addBullet(cleanStr(r.name) + ' — ' + cleanStr(r.briefReason));
+              drawBullet(clean(r.name) + ' — ' + clean(r.briefReason), 60, 60, 60);
             });
+            y += 4;
           }
 
-          // Final verdict
+          // ── FINAL VERDICT ────────────────────────────────────────
           doc.addPage();
           pageNum++;
           y = 20;
-          addHeader();
-          addTitle('Final Recommendation', 16);
-          addDivider();
-          addBody(report.finalVerdict);
-        }
+          drawPageHeader();
+          drawSectionTitle('Executive AI Recommendation');
+          y += 4;
 
-        // Footer on last page
-        y += 10;
-        addDivider();
-        doc.setFontSize(9);
-        doc.setTextColor(150);
-        doc.text('SettleIQ — Powered by Google Gemini AI', margin, y);
-        doc.text('Not legal or immigration advice. Consult a certified lawyer.', 
-          margin, y + 5);
+          if (report.rankedVerdict) {
+            const bw2 = (maxWidth - 8) / 3;
+            drawBadge('Best for Income', report.rankedVerdict.bestForIncome, margin, bw2);
+            drawBadge('Best for Lifestyle', report.rankedVerdict.bestForLifestyle, margin + bw2 + 4, bw2);
+            drawBadge('Best for Fastest PR', report.rankedVerdict.bestForFastestPR, margin + (bw2 + 4) * 2, bw2);
+            y += 20;
+          }
+
+          drawBody(report.finalVerdict);
+          y += 8;
+          drawDivider();
+
+          // DISCLAIMER
+          doc.setFontSize(8.5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(150, 150, 150);
+          checkPage(14);
+          doc.text('SettleIQ — Powered by Google Gemini AI', margin, y);
+          y += 5;
+          doc.text('This report is for research purposes only and does not constitute legal or immigration advice.', margin, y);
+          y += 5;
+          doc.text('Always consult a certified immigration lawyer before making any decisions.', margin, y);
+        }
 
         doc.save('SettleIQ_Report.pdf');
 
