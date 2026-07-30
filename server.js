@@ -89,7 +89,7 @@ function sanitize(input) {
 // Robust JSON extraction & cleanup helper
 function extractAndParseJSON(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
-  
+
   let clean = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
   const start = clean.indexOf('{');
@@ -281,11 +281,11 @@ Return ONLY valid JSON. No text outside JSON. Structure:
     let isBusyError = false;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`Sending request to Gemini 3.5 Flash API (attempt ${attempt}/${maxRetries})...`);
+      console.log(`Sending request to Gemini 2.5 Flash API (attempt ${attempt}/${maxRetries})...`);
 
       try {
         apiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -358,8 +358,8 @@ Return ONLY valid JSON. No text outside JSON. Structure:
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Global error handler caught:', err.message);
-  res.status(500).json({ 
-    error: 'Something went wrong. Please try again.' 
+  res.status(500).json({
+    error: 'Something went wrong. Please try again.'
   });
 });
 
