@@ -1626,7 +1626,15 @@
       const pd = document.getElementById('profileDropdown');
       if (pd) pd.style.display = 'none';
       const sec = document.getElementById('myReportsSection');
-      if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+      if (!sec) return;
+      // Ensure section is visible and reports are loaded
+      sec.style.display = 'block';
+      const user = auth ? auth.currentUser : null;
+      if (user) loadMyReports(user.uid);
+      // Small delay so content renders before scrolling
+      setTimeout(() => {
+        sec.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
 
     function scrollToTop() {
