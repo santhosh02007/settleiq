@@ -8,17 +8,14 @@ const path = require('path');
 
 dotenv.config();
 
-// Check and log Gemini API Key status at startup
 console.log('API Key loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO');
 
 const app = express();
 app.set('trust proxy', 1);
 
-// 1. Body parser MUST be the very first middleware
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// 2. CORS middleware
 app.use(cors({
   origin: [
     'https://settleiq-newb.onrender.com',
@@ -28,14 +25,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type']
 }));
 
-// 3. Helmet security headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Prevents blocking Firebase Auth popups & external CDN scripts
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false
 }));
 
-// Additional Security Headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -45,7 +40,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// 4. Rate Limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -64,10 +58,8 @@ const aiLimiter = rateLimit({
 });
 app.use('/analyze', aiLimiter);
 
-// 5. Static files
 app.use(express.static('public'));
 
-// Request logging with IP (competition evidence)
 app.use((req, res, next) => {
   const log = `${new Date().toISOString()} | ${req.method} | ${req.path} | IP: ${req.ip}\n`;
   fs.appendFile(path.join(__dirname, 'logs.txt'), log, (err) => {
@@ -76,7 +68,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Helper for sanitizing user inputs
 function sanitize(input) {
   if (typeof input !== 'string') return '';
   return input
@@ -86,7 +77,6 @@ function sanitize(input) {
     .slice(0, 500);
 }
 
-// Robust JSON extraction & cleanup helper
 function extractAndParseJSON(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
 
@@ -114,7 +104,6 @@ function extractAndParseJSON(rawText) {
   }
 }
 
-// POST /analyze ROUTE WRAPPED IN ENTIRE TRY-CATCH WITH DETAILED LOGGING
 app.post('/analyze', async (req, res) => {
   try {
     const rawBody = req.body || {};
@@ -177,7 +166,7 @@ CRITICAL REQUIREMENTS FOR YOUR RESPONSE:
 - Include a RED FLAGS section per country (honest risks, challenges, and visa hurdles)
 - End with ranked verdict:
   Best for income: [country]
-  Best for lifestyle: [country]  
+  Best for lifestyle: [country]
   Best for fastest PR: [country]
 - Do NOT use emoji for ratings — use text like Excellent (5/5) or Good (4/5) or numeric scores like 8/10
 - Factor age (${age}) specifically into PR points systems and residency qualification timelines.
@@ -241,7 +230,7 @@ Return ONLY valid JSON. No text outside JSON. Structure:
       "lifestyle": "Paragraph",
       "politicalStability": "Paragraph",
       "warRisk": "Low / Medium / High — explanation",
-      "personalizedReason": "Why this specifically suits the user's profile and additional context.",
+      "personalizedReason": "Why this specifically suits the user profile and additional context.",
       "scores": {
         "career": 9,
         "financial": 8,
@@ -281,11 +270,11 @@ Return ONLY valid JSON. No text outside JSON. Structure:
     let isBusyError = false;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`Sending request to Gemini 2.5 Flash API (attempt ${attempt}/${maxRetries})...`);
+      console.log(`Sending request to Gemini 3.5 Flash API (attempt ${attempt}/${maxRetries})...`);
 
       try {
         apiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -344,7 +333,7 @@ Return ONLY valid JSON. No text outside JSON. Structure:
       parsedResult = { rawText: text };
     }
 
-    console.log('Successfully generated settlement report via Gemini AI!');
+    console.log('Successfully generated settlement report via Gemini 3.5 Flash!');
     return res.json({ result: parsedResult });
 
   } catch (error) {
@@ -355,7 +344,6 @@ Return ONLY valid JSON. No text outside JSON. Structure:
   }
 });
 
-// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Global error handler caught:', err.message);
   res.status(500).json({
@@ -373,5 +361,5 @@ process.on('uncaughtException', (err) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 SettleIQ running on http://localhost:${PORT}`);
+  console.log(`SettleIQ running on http://localhost:${PORT}`);
 });
