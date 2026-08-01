@@ -1524,11 +1524,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderNationalityOptions(FLAG_COUNTRIES);
 
-      // Always start fresh — hide results and clear any stale DOM content
+      // Always start fresh — hide results on page load
       const resultEl = document.getElementById('result');
       if (resultEl) {
         resultEl.style.display = 'none';
-        resultEl.innerHTML = '';
       }
       currentAIResult = null;
       currentProfile = {};
@@ -1795,8 +1794,81 @@
         })
         .catch(err => {
           console.error('Error loading reports:', err);
-          container.innerHTML = 
-            '<p style="color:#e53e3e;">Error loading reports. Please refresh.</p>';
+          console.error('Error code:', err.code, '| Message:', err.message);
+          // Fallback: try without orderBy in case index is missing
+          if (err.code === 'failed-precondition' || err.code === 'resource-exhausted' || err.message.includes('index')) {
+            console.log('Retrying without orderBy (missing Firestore index)...');
+            db.collection('users').doc(uid).collection('reports')
+              .limit(10).get()
+              .then(snapshot => {
+                console.log('Fallback reports loaded:', snapshot.size);
+                if (snapshot.empty) {
+                  container.innerHTML = '<p style="color:#666;text-align:center;">No reports yet. Generate your first report above!</p>';
+                  return;
+                }
+                container.innerHTML = '';
+                const docs = [];
+                snapshot.forEach(d => docs.push(d));
+                docs.sort((a, b) => {
+                  const ta = a.data().createdAt || '';
+                  const tb = b.data().createdAt || '';
+                  return tb.localeCompare(ta);
+                });
+                docs.forEach(doc => {
+                  const data = doc.data();
+                  const date = data.createdAt ?
+                    new Date(data.createdAt).toLocaleDateString('en-IN',
+                      {day:'numeric', month:'short', year:'numeric'}) : 'Recent';
+                  const card = document.createElement('div');
+                  card.id = `report-card-${doc.id}`;
+                  card.style.cssText =
+                    'background:#fff;border:1px solid #e5e5e5;border-radius:12px;' +
+                    'padding:20px;margin-bottom:16px;';
+                  card.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                      <div>
+                        <div style="font-weight:700;font-size:16px;color:#111;">
+                          ${data.profession || 'Report'}</div>
+                        <div style="font-size:13px;color:#666;margin-top:4px;">
+                          ${data.nationality || ''} · ${data.currency || 'INR'} ${data.budget || ''}/mo · ${date}</div>
+                      </div>
+                      <div style="display:flex;gap:8px;">
+                        <button onclick="viewReport('${doc.id}', this)"
+                          style="background:#000;color:#fff;border:none;
+                          padding:8px 16px;border-radius:6px;cursor:pointer;
+                          font-size:13px;font-weight:600;">
+                          View
+                        </button>
+                        <button onclick="deleteReport('${doc.id}', '${uid}', this)"
+                          style="background:#fff;color:#e53e3e;
+                          border:1px solid #e53e3e;padding:8px 16px;
+                          border-radius:6px;cursor:pointer;font-size:13px;">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div id="reportContent-${doc.id}" style="display:none;">
+                      ${data.fullResultHTML || ''}
+                    </div>
+                  `;
+                  if (data.fullResultJSON) {
+                    card.dataset.fullJson = JSON.stringify(data.fullResultJSON);
+                  }
+                  if (data.allInputs) {
+                    card.dataset.allInputs = JSON.stringify(data.allInputs);
+                  }
+                  container.appendChild(card);
+                });
+              })
+              .catch(fallbackErr => {
+                console.error('Fallback also failed:', fallbackErr);
+                container.innerHTML =
+                  '<p style="color:#e53e3e;">Error loading reports. Please refresh.</p>';
+              });
+          } else {
+            container.innerHTML = 
+              '<p style="color:#e53e3e;">Error loading reports. Please refresh.</p>';
+          }
         });
     }
 
