@@ -1322,6 +1322,7 @@
     }
     var auth = firebase.auth();
     var db = firebase.firestore();
+    db.settings({ experimentalForceLongPolling: true, merge: true });
     var googleProvider = new firebase.auth.GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
@@ -2179,6 +2180,7 @@
     function renderResults(res, profile) {
       window.currentReport = res;
       const container = document.getElementById('countryCardsContainer');
+      if (!container) return;
       container.innerHTML = '';
 
       document.getElementById('resultsSubhead').textContent = 
