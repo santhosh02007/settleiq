@@ -281,7 +281,8 @@ Return ONLY valid JSON. No text outside JSON. Structure:
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
-                responseMimeType: "application/json"
+                temperature: 1,
+                maxOutputTokens: 8192
               }
             })
           }
