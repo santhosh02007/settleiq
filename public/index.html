@@ -1322,7 +1322,6 @@
     }
     var auth = firebase.auth();
     var db = firebase.firestore();
-    db.settings({ experimentalForceLongPolling: true, merge: true });
     var googleProvider = new firebase.auth.GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
 
@@ -1521,6 +1520,27 @@
 
     let currentAIResult = null;
     let currentProfile = {};
+
+    // MULTI-SELECT LANGUAGE SKILLS FUNCTIONS & ALL MAJOR WORLD LANGUAGES
+    const WORLD_LANGUAGES = [
+      "Afrikaans", "Albanian", "Amharic", "Arabic", "Armenian", "Azerbaijani", "Basque",
+      "Belarusian", "Bengali", "Bosnian", "Bulgarian", "Burmese", "Catalan", "Cebuano",
+      "Chichewa", "Chinese (Cantonese)", "Chinese (Mandarin)", "Croatian", "Czech", "Danish",
+      "Dutch", "English", "Esperanto", "Estonian", "Filipino", "Finnish", "French",
+      "Galician", "Georgian", "German", "Greek", "Gujarati", "Haitian Creole", "Hausa",
+      "Hawaiian", "Hebrew", "Hindi", "Hmong", "Hungarian", "Icelandic", "Igbo",
+      "Indonesian", "Irish", "Italian", "Japanese", "Javanese", "Kannada", "Kazakh",
+      "Khmer", "Korean", "Kurdish", "Kyrgyz", "Lao", "Latin", "Latvian", "Lithuanian",
+      "Luxembourgish", "Macedonian", "Malagasy", "Malay", "Malayalam", "Maltese", "Maori",
+      "Marathi", "Mongolian", "Nepali", "Norwegian", "Odia", "Pashto", "Persian",
+      "Polish", "Portuguese", "Punjabi", "Romanian", "Russian", "Samoan", "Serbian",
+      "Sesotho", "Shona", "Sindhi", "Sinhala", "Slovak", "Slovenian", "Somali", "Spanish",
+      "Sundanese", "Swahili", "Swedish", "Tajik", "Tamil", "Tatar", "Telugu", "Thai",
+      "Turkish", "Turkmen", "Ukrainian", "Urdu", "Uyghur", "Uzbek", "Vietnamese", "Welsh",
+      "Xhosa", "Yiddish", "Yoruba", "Zulu"
+    ];
+
+    let selectedLanguages = ["English"];
 
     document.addEventListener('DOMContentLoaded', () => {
       renderNationalityOptions(FLAG_COUNTRIES);
@@ -1962,27 +1982,6 @@
       document.getElementById('nationalityValue').value = c.name;
       document.getElementById('nationalityDropdown').classList.remove('open');
     }
-
-    // MULTI-SELECT LANGUAGE SKILLS FUNCTIONS & ALL MAJOR WORLD LANGUAGES
-    const WORLD_LANGUAGES = [
-      "Afrikaans", "Albanian", "Amharic", "Arabic", "Armenian", "Azerbaijani", "Basque",
-      "Belarusian", "Bengali", "Bosnian", "Bulgarian", "Burmese", "Catalan", "Cebuano",
-      "Chichewa", "Chinese (Cantonese)", "Chinese (Mandarin)", "Croatian", "Czech", "Danish",
-      "Dutch", "English", "Esperanto", "Estonian", "Filipino", "Finnish", "French",
-      "Galician", "Georgian", "German", "Greek", "Gujarati", "Haitian Creole", "Hausa",
-      "Hawaiian", "Hebrew", "Hindi", "Hmong", "Hungarian", "Icelandic", "Igbo",
-      "Indonesian", "Irish", "Italian", "Japanese", "Javanese", "Kannada", "Kazakh",
-      "Khmer", "Korean", "Kurdish", "Kyrgyz", "Lao", "Latin", "Latvian", "Lithuanian",
-      "Luxembourgish", "Macedonian", "Malagasy", "Malay", "Malayalam", "Maltese", "Maori",
-      "Marathi", "Mongolian", "Nepali", "Norwegian", "Odia", "Pashto", "Persian",
-      "Polish", "Portuguese", "Punjabi", "Romanian", "Russian", "Samoan", "Serbian",
-      "Sesotho", "Shona", "Sindhi", "Sinhala", "Slovak", "Slovenian", "Somali", "Spanish",
-      "Sundanese", "Swahili", "Swedish", "Tajik", "Tamil", "Tatar", "Telugu", "Thai",
-      "Turkish", "Turkmen", "Ukrainian", "Urdu", "Uyghur", "Uzbek", "Vietnamese", "Welsh",
-      "Xhosa", "Yiddish", "Yoruba", "Zulu"
-    ];
-
-    let selectedLanguages = ["English"];
 
     function toggleLanguageDropdown() {
       const dropdown = document.getElementById('languageDropdown');
