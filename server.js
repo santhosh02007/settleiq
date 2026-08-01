@@ -80,7 +80,10 @@ function sanitize(input) {
 function extractAndParseJSON(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
 
-  let clean = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+  let clean = rawText
+    .replace(/```json/gi, '')
+    .replace(/```/g, '')
+    .trim();
 
   const start = clean.indexOf('{');
   const end = clean.lastIndexOf('}');
@@ -88,20 +91,28 @@ function extractAndParseJSON(rawText) {
     clean = clean.substring(start, end + 1);
   }
 
+  try { return JSON.parse(clean); } catch(e1) {}
+
   try {
-    return JSON.parse(clean);
-  } catch (err1) {
-    console.warn('Initial JSON parse failed, applying regex cleanup...');
-    try {
-      const sanitized = clean
-        .replace(/,\s*([\]}])/g, '$1')
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
-      return JSON.parse(sanitized);
-    } catch (err2) {
-      console.error('Failed to parse clean JSON:', err2.message);
-      return null;
+    const fixed = clean
+      .replace(/,\s*([\]}])/g, '$1')
+      .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3')
+      .replace(/:\s*'([^']*)'/g, ': "$1"')
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+      .replace(/\\'/g, "'")
+      .replace(/([^\\])\\([^"\\\/bfnrtu])/g, '$1\\\\$2');
+    return JSON.parse(fixed);
+  } catch(e2) {}
+
+  try {
+    const countriesMatch = clean.match(/"countries"\s*:\s*(\[[\s\S]*?\])\s*,\s*"comparisonTable"/);
+    if (countriesMatch) {
+      const partial = '{"countries":' + countriesMatch[1] + ',"comparisonTable":{},"summary":"Report generated.","finalVerdict":"See country cards above.","bestMatch":""}';
+      return JSON.parse(partial);
     }
-  }
+  } catch(e3) {}
+
+  return null;
 }
 
 app.post('/analyze', async (req, res) => {
