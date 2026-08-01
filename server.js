@@ -282,7 +282,7 @@ Return ONLY valid JSON. No text outside JSON. Structure:
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
                 temperature: 1,
-                maxOutputTokens: 8192
+                maxOutputTokens: 65536
               }
             })
           }
