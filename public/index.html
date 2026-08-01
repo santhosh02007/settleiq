@@ -1545,15 +1545,6 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderNationalityOptions(FLAG_COUNTRIES);
 
-      // Always start fresh — hide results on page load
-      const resultEl = document.getElementById('result');
-      if (resultEl) {
-        resultEl.style.display = 'none';
-      }
-      currentAIResult = null;
-      currentProfile = {};
-      window.currentReport = null;
-
       const natSearch = document.getElementById('nationalitySearch');
       if (natSearch) {
         natSearch.addEventListener('input', function() {
