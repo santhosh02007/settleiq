@@ -1523,7 +1523,16 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       renderNationalityOptions(FLAG_COUNTRIES);
-      restoreCachedResult();
+
+      // Always start fresh — hide results and clear any stale DOM content
+      const resultEl = document.getElementById('result');
+      if (resultEl) {
+        resultEl.style.display = 'none';
+        resultEl.innerHTML = '';
+      }
+      currentAIResult = null;
+      currentProfile = {};
+      window.currentReport = null;
 
       const natSearch = document.getElementById('nationalitySearch');
       if (natSearch) {
@@ -2041,12 +2050,6 @@
         currentProfile = profile;
         window.currentReport = data.result;
 
-        // SESSION STORAGE CACHING FOR PERFORMANCE
-        try { 
-          sessionStorage.setItem('lastReport', document.getElementById('result').innerHTML);
-          sessionStorage.setItem('lastProfile', JSON.stringify(profile));
-          sessionStorage.setItem('settleiq_last_report', JSON.stringify({ result: data.result, profile })); 
-        } catch (e) {}
 
         renderResults(data.result, profile);
         document.getElementById('result').style.display = 'block';
@@ -2088,21 +2091,6 @@
       }
     }
 
-    function restoreCachedResult() {
-      try {
-        const cached = sessionStorage.getItem('settleiq_last_report');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed && parsed.result) {
-            currentAIResult = parsed.result;
-            currentProfile = parsed.profile || {};
-            window.currentReport = parsed.result;
-            renderResults(parsed.result, parsed.profile || {});
-            document.getElementById('result').style.display = 'block';
-          }
-        }
-      } catch (e) {}
-    }
 
     // SANITIZATION HELPER FOR PDF & EMOJI STRIPPING
     function cleanText(text) {
@@ -2903,11 +2891,7 @@
       document.getElementById('result').style.display = 'none';
       currentAIResult = null;
       currentProfile = {};
-      try { 
-        sessionStorage.removeItem('lastReport');
-        sessionStorage.removeItem('lastProfile');
-        sessionStorage.removeItem('settleiq_last_report');
-      } catch (e) {}
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
       showToast("Form reset.");
     }
