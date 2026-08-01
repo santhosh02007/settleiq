@@ -2188,8 +2188,14 @@
       document.getElementById('summaryBox').textContent = res.summary || 'Deep settlement research complete.';
 
       if (res.rawText) {
-        container.innerHTML = `<div class="country-card visible"><div class="result-box">${marked.parse(res.rawText)}</div></div>`;
-        return;
+        try {
+          const parsed = JSON.parse(res.rawText);
+          renderResults(parsed, profile);
+          return;
+        } catch(e) {
+          container.innerHTML = `<div class="country-card visible"><pre style="white-space:pre-wrap;font-size:13px;">${res.rawText}</pre></div>`;
+          return;
+        }
       }
 
       const countries = res.countries || [];
