@@ -2119,6 +2119,11 @@
         document.getElementById('result').style.display = 'block';
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
 
+        setTimeout(() => {
+          document.getElementById('result').style.display = 'block';
+          document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+
         // SAVE REPORT TO FIRESTORE IMMEDIATELY AFTER DISPLAYING RESULT
         if (typeof firebase !== 'undefined' && firebase.auth) {
           const user = firebase.auth().currentUser;
