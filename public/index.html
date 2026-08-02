@@ -2425,7 +2425,7 @@
         const doc = new jsPDF('p', 'mm', 'a4');
         const margin = 15;
         const pageWidth = 210;
-        const maxWidth = pageWidth - (margin * 2);
+        const maxWidth = pageWidth - (margin * 2); // 180mm
         let y = 20;
         let pageNum = 1;
 
@@ -2483,7 +2483,6 @@
 
         function drawBody(text) {
           if (!text) return;
-          checkPage(6);
           doc.setFontSize(9.5);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(70, 70, 70);
@@ -2498,14 +2497,19 @@
         }
 
         function drawRow(label, value, highlight) {
-          checkPage(7);
           const valStr = clean(value || 'N/A');
           const labelStr = clean(label);
           doc.setFontSize(9.5);
 
+          const valLines = doc.splitTextToSize(valStr, 100);
+          const numLines = Math.max(1, valLines.length);
+          const rowHeight = numLines * 5 + 2;
+
+          checkPage(rowHeight + 2);
+
           if (highlight) {
             doc.setFillColor(240, 253, 244);
-            doc.rect(margin, y - 4, maxWidth, 7, 'F');
+            doc.rect(margin, y - 3, maxWidth, rowHeight, 'F');
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(22, 101, 52);
           } else {
@@ -2513,41 +2517,45 @@
             doc.setTextColor(80, 80, 80);
           }
 
-          doc.text(labelStr, margin + 2, y);
-          doc.setFont('helvetica', 'normal');
+          doc.text(labelStr, margin, y);
 
           if (highlight) {
             doc.setTextColor(21, 128, 61);
           } else {
             doc.setTextColor(17, 17, 17);
           }
+          doc.setFont('helvetica', 'normal');
+          doc.text(valLines, pageWidth - margin, y, { align: 'right' });
 
-          const valLines = doc.splitTextToSize(valStr, maxWidth - 70);
-          doc.text(valLines, pageWidth - margin - 2, y, { align: 'right' });
-
-          doc.setTextColor(200, 200, 200);
-          doc.line(margin, y + 2, pageWidth - margin, y + 2);
+          doc.setDrawColor(230, 230, 230);
+          doc.line(margin, y + rowHeight - 3, pageWidth - margin, y + rowHeight - 3);
           doc.setTextColor(0, 0, 0);
-          y += 7;
+          y += rowHeight + 1;
         }
 
         function drawBullet(text, r, g, b) {
-          checkPage(6);
+          if (!text) return;
           doc.setFontSize(9.5);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(r || 0, g || 0, b || 0);
-          const lines = doc.splitTextToSize('• ' + clean(text), maxWidth - 6);
-          lines.forEach(line => {
+          const lines = doc.splitTextToSize('• ' + clean(text), maxWidth - 4);
+          lines.forEach((line, idx) => {
             checkPage(5);
-            doc.text(line, margin + 3, y);
+            const xPos = idx === 0 ? margin + 2 : margin + 6;
+            doc.text(line, xPos, y);
             y += 5;
           });
           doc.setTextColor(0, 0, 0);
         }
 
         function drawBadge(label, value, x, w) {
+          const valStr = clean(value || 'N/A');
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          const valLines = doc.splitTextToSize(valStr, w - 6);
+          const badgeH = 10 + (valLines.length * 4.5);
           doc.setFillColor(245, 245, 245);
-          doc.roundedRect(x, y, w, 14, 2, 2, 'F');
+          doc.roundedRect(x, y, w, badgeH, 2, 2, 'F');
           doc.setFontSize(8);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(100, 100, 100);
@@ -2555,7 +2563,10 @@
           doc.setFontSize(9);
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(17, 17, 17);
-          doc.text(clean(value || 'N/A'), x + 3, y + 11);
+          valLines.forEach((vl, vi) => {
+            doc.text(vl, x + 3, y + 10 + (vi * 4.5));
+          });
+          return badgeH;
         }
 
         // ── COVER PAGE ──────────────────────────────────────────────
@@ -2583,7 +2594,7 @@
         drawSectionTitle('Your Settlement Profile');
         y += 2;
 
-        const profile = currentProfile || {};
+        const profile = currentProfile || window.currentProfile || {};
         const fields = [
           ['Passport Nationality', profile.nationality],
           ['Age', profile.age ? profile.age + ' years' : null],
@@ -2614,7 +2625,7 @@
         drawDivider();
 
         // ── REPORT CONTENT ──────────────────────────────────────────
-        const report = window.currentReport;
+        const report = window.currentReport || currentAIResult;
         if (!report) {
           drawBody('No report data found. Please generate a report first.');
         } else {
@@ -2627,13 +2638,14 @@
 
           // RANKED VERDICT BADGES
           if (report.rankedVerdict) {
-            checkPage(22);
+            checkPage(25);
             drawSubTitle('Quick Rankings');
-            const bw = (maxWidth - 8) / 3;
-            drawBadge('Best for Income', report.rankedVerdict.bestForIncome, margin, bw);
-            drawBadge('Best for Lifestyle', report.rankedVerdict.bestForLifestyle, margin + bw + 4, bw);
-            drawBadge('Best for Fastest PR', report.rankedVerdict.bestForFastestPR, margin + (bw + 4) * 2, bw);
-            y += 20;
+            const bw = (maxWidth - 8) / 3; // 57.33mm each
+            const h1 = drawBadge('Best for Income', report.rankedVerdict.bestForIncome, margin, bw);
+            const h2 = drawBadge('Best for Lifestyle', report.rankedVerdict.bestForLifestyle, margin + bw + 4, bw);
+            const h3 = drawBadge('Best for Fastest PR', report.rankedVerdict.bestForFastestPR, margin + (bw + 4) * 2, bw);
+            const maxBH = Math.max(h1, h2, h3);
+            y += maxBH + 6;
           }
 
           // ── COUNTRY CARDS ────────────────────────────────────────
@@ -2644,17 +2656,17 @@
             y = 20;
             drawPageHeader();
 
-            // Country Header Bar
+            // Country Header Bar - Full Bleed (Width = 210mm)
             doc.setFillColor(17, 17, 17);
             doc.rect(0, y - 6, 210, 22, 'F');
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(255, 255, 255);
-            doc.text((idx + 1) + '. ' + clean(country.name), margin, y + 6);
-            doc.setFontSize(20);
+            doc.text((idx + 1) + '. ' + clean(country.name), margin, y + 7);
+            doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(255, 255, 255);
-            doc.text(String(country.matchScore || '?') + '/100', pageWidth - margin, y + 8, { align: 'right' });
+            doc.text(String(country.matchScore || '?') + '/100', pageWidth - margin, y + 7, { align: 'right' });
             y += 22;
 
             doc.setFontSize(9);
@@ -2666,17 +2678,19 @@
 
             // Budget Equivalent (green highlight)
             if (country.budgetEquivalent) {
-              checkPage(10);
+              const bText = clean(country.budgetEquivalent);
+              const bLines = doc.splitTextToSize('Your Budget Equivalent: ' + bText, maxWidth - 6);
+              const boxH = bLines.length * 5 + 4;
+              checkPage(boxH + 2);
               doc.setFillColor(240, 253, 244);
-              doc.rect(margin, y - 2, maxWidth, 9, 'F');
-              doc.setFontSize(9);
-              doc.setFont('helvetica', 'bold');
+              doc.rect(margin, y, maxWidth, boxH, 'F');
+              doc.setFontSize(9.5);
               doc.setTextColor(22, 101, 52);
-              doc.text('Your Budget Equivalent:', margin + 2, y + 4);
-              const bLines = doc.splitTextToSize(clean(country.budgetEquivalent), maxWidth - 55);
-              doc.setFont('helvetica', 'normal');
-              doc.text(bLines, pageWidth - margin - 2, y + 4, { align: 'right' });
-              y += 12;
+              bLines.forEach((bline, bi) => {
+                doc.setFont(bi === 0 ? 'bold' : 'normal');
+                doc.text(bline, margin + 3, y + 4.5 + (bi * 5));
+              });
+              y += boxH + 4;
               doc.setTextColor(0, 0, 0);
             }
 
@@ -2770,13 +2784,15 @@
 
             // SCORES
             if (country.scores) {
-              checkPage(20);
+              checkPage(24);
               drawSectionTitle('Score Breakdown', 30, 30, 30);
               const scoreKeys = Object.keys(country.scores);
-              const sw = (maxWidth - (scoreKeys.length - 1) * 3) / scoreKeys.length;
+              const numScores = scoreKeys.length;
+              const gap = 3;
+              const sw = (maxWidth - (numScores - 1) * gap) / numScores;
               scoreKeys.forEach((k, si) => {
                 const score = country.scores[k];
-                const sx = margin + si * (sw + 3);
+                const sx = margin + si * (sw + gap);
                 doc.setFillColor(245, 245, 245);
                 doc.roundedRect(sx, y, sw, 16, 2, 2, 'F');
                 doc.setFontSize(7.5);
@@ -2792,28 +2808,29 @@
               doc.setTextColor(0, 0, 0);
             }
 
-            // PROS / CONS / RED FLAGS
+            // PROS / CONS / RED FLAGS (3 COLUMNS)
             checkPage(30);
-            const colW = (maxWidth - 8) / 3;
+            const gapCol = 4;
+            const colW = (maxWidth - (2 * gapCol)) / 3; // (180 - 8)/3 = 57.33mm
 
             doc.setFillColor(240, 253, 244);
             doc.rect(margin, y, colW, 6, 'F');
             doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(22, 101, 52);
-            doc.text('Key Advantages', margin + 2, y + 4);
+            doc.text('Key Advantages', margin + 2, y + 4.5);
 
             doc.setFillColor(249, 249, 249);
-            doc.rect(margin + colW + 4, y, colW, 6, 'F');
+            doc.rect(margin + colW + gapCol, y, colW, 6, 'F');
             doc.setTextColor(100, 100, 100);
-            doc.text('Considerations', margin + colW + 6, y + 4);
+            doc.text('Considerations', margin + colW + gapCol + 2, y + 4.5);
 
             doc.setFillColor(254, 242, 242);
-            doc.rect(margin + (colW + 4) * 2, y, colW, 6, 'F');
+            doc.rect(margin + (colW + gapCol) * 2, y, colW, 6, 'F');
             doc.setTextColor(185, 28, 28);
-            doc.text('Red Flags & Risks', margin + (colW + 4) * 2 + 2, y + 4);
+            doc.text('Red Flags & Risks', margin + (colW + gapCol) * 2 + 2, y + 4.5);
 
-            y += 9;
+            y += 8;
             doc.setTextColor(0, 0, 0);
 
             const pros = country.pros || [];
@@ -2822,26 +2839,35 @@
             const maxItems = Math.max(pros.length, cons.length, flags.length);
 
             for (let i = 0; i < maxItems; i++) {
-              checkPage(6);
-              doc.setFontSize(9);
+              const pText = pros[i] ? doc.splitTextToSize('+ ' + clean(pros[i]), colW - 3) : [];
+              const cText = cons[i] ? doc.splitTextToSize('- ' + clean(cons[i]), colW - 3) : [];
+              const fText = flags[i] ? doc.splitTextToSize('! ' + clean(flags[i]), colW - 3) : [];
+              const itemLines = Math.max(pText.length, cText.length, fText.length, 1);
+              const itemH = itemLines * 4.5 + 2;
+
+              checkPage(itemH);
+              doc.setFontSize(8.5);
               doc.setFont('helvetica', 'normal');
 
-              if (pros[i]) {
+              if (pText.length) {
                 doc.setTextColor(22, 101, 52);
-                const pl = doc.splitTextToSize('+ ' + clean(pros[i]), colW - 2);
-                doc.text(pl[0], margin + 2, y);
+                pText.forEach((line, li) => {
+                  doc.text(line, margin + 2, y + (li * 4.5));
+                });
               }
-              if (cons[i]) {
+              if (cText.length) {
                 doc.setTextColor(100, 100, 100);
-                const cl = doc.splitTextToSize('- ' + clean(cons[i]), colW - 2);
-                doc.text(cl[0], margin + colW + 6, y);
+                cText.forEach((line, li) => {
+                  doc.text(line, margin + colW + gapCol + 2, y + (li * 4.5));
+                });
               }
-              if (flags[i]) {
+              if (fText.length) {
                 doc.setTextColor(185, 28, 28);
-                const fl = doc.splitTextToSize('! ' + clean(flags[i]), colW - 2);
-                doc.text(fl[0], margin + (colW + 4) * 2 + 2, y);
+                fText.forEach((line, li) => {
+                  doc.text(line, margin + (colW + gapCol) * 2 + 2, y + (li * 4.5));
+                });
               }
-              y += 6;
+              y += itemH;
             }
             doc.setTextColor(0, 0, 0);
             y += 6;
@@ -2859,40 +2885,61 @@
             const factors = report.comparisonTable.factors || [];
             const cData = report.comparisonTable.data || {};
             const cNames = Object.keys(cData);
-            const colCount = cNames.length + 1;
-            const cw = maxWidth / colCount;
+            const colCount = cNames.length + 1; // 4 columns
+            const colGap = 2;
+            const tblColW = (maxWidth - (colCount - 1) * colGap) / colCount; // (180 - 6)/4 = 43.5mm
+
+            function getColX(i) {
+              return margin + i * (tblColW + colGap);
+            }
 
             // Table header
             doc.setFillColor(17, 17, 17);
-            doc.rect(margin, y, maxWidth, 8, 'F');
+            doc.rect(margin, y, maxWidth, 9, 'F');
             doc.setFontSize(8.5);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(255, 255, 255);
-            doc.text('Factor', margin + 2, y + 5.5);
+            doc.text('Factor', getColX(0) + 2, y + 6);
             cNames.forEach((cn, ci) => {
-              doc.text(clean(cn), margin + cw * (ci + 1) + 2, y + 5.5);
+              const hLines = doc.splitTextToSize(clean(cn), tblColW - 3);
+              doc.text(hLines[0] || '', getColX(ci + 1) + 2, y + 6);
             });
-            y += 10;
+            y += 11;
 
             // Table rows
             factors.forEach((factor, fi) => {
-              checkPage(8);
+              const fLines = doc.splitTextToSize(clean(factor), tblColW - 3);
+              const cellLines = cNames.map(cn => {
+                const val = cData[cn] && cData[cn][fi] ? clean(cData[cn][fi]) : 'N/A';
+                return doc.splitTextToSize(val, tblColW - 3);
+              });
+
+              const maxLinesInRow = Math.max(fLines.length, ...cellLines.map(cl => cl.length), 1);
+              const rowH = maxLinesInRow * 4.5 + 4;
+
+              checkPage(rowH);
               const rowBg = fi % 2 === 0 ? [255, 255, 255] : [249, 249, 249];
               doc.setFillColor(...rowBg);
-              doc.rect(margin, y - 3, maxWidth, 7, 'F');
+              doc.rect(margin, y - 2, maxWidth, rowH, 'F');
 
-              doc.setFontSize(8.5);
+              doc.setFontSize(8);
               doc.setFont('helvetica', 'bold');
-              doc.setTextColor(60, 60, 60);
-              doc.text(clean(factor), margin + 2, y + 2);
+              doc.setTextColor(50, 50, 50);
+              fLines.forEach((fl, li) => {
+                doc.text(fl, getColX(0) + 2, y + 3 + (li * 4.5));
+              });
 
               doc.setFont('helvetica', 'normal');
               doc.setTextColor(17, 17, 17);
-              cNames.forEach((cn, ci) => {
-                const val = cData[cn] && cData[cn][fi] ? clean(cData[cn][fi]) : 'N/A';
-                doc.text(val, margin + cw * (ci + 1) + 2, y + 2);
+              cellLines.forEach((cl, ci) => {
+                cl.forEach((line, li) => {
+                  doc.text(line, getColX(ci + 1) + 2, y + 3 + (li * 4.5));
+                });
               });
-              y += 7;
+
+              doc.setDrawColor(230, 230, 230);
+              doc.line(margin, y + rowH - 2, pageWidth - margin, y + rowH - 2);
+              y += rowH;
             });
             y += 6;
           }
@@ -2902,7 +2949,9 @@
             checkPage(20);
             drawSectionTitle('Runner-Up Alternatives');
             report.runnerUps.forEach(r => {
-              drawBullet(clean(r.name) + ' — ' + clean(r.briefReason), 60, 60, 60);
+              const rText = clean(r.name) + (r.briefReason ? ' — ' + clean(r.briefReason) : '');
+              drawBullet(rText, 60, 60, 60);
+              y += 1;
             });
             y += 4;
           }
@@ -2917,10 +2966,11 @@
 
           if (report.rankedVerdict) {
             const bw2 = (maxWidth - 8) / 3;
-            drawBadge('Best for Income', report.rankedVerdict.bestForIncome, margin, bw2);
-            drawBadge('Best for Lifestyle', report.rankedVerdict.bestForLifestyle, margin + bw2 + 4, bw2);
-            drawBadge('Best for Fastest PR', report.rankedVerdict.bestForFastestPR, margin + (bw2 + 4) * 2, bw2);
-            y += 20;
+            const h1 = drawBadge('Best for Income', report.rankedVerdict.bestForIncome, margin, bw2);
+            const h2 = drawBadge('Best for Lifestyle', report.rankedVerdict.bestForLifestyle, margin + bw2 + 4, bw2);
+            const h3 = drawBadge('Best for Fastest PR', report.rankedVerdict.bestForFastestPR, margin + (bw2 + 4) * 2, bw2);
+            const maxBH2 = Math.max(h1, h2, h3);
+            y += maxBH2 + 6;
           }
 
           drawBody(report.finalVerdict);
