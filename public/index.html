@@ -755,6 +755,101 @@
       width: 18px;
       height: 18px;
     }
+
+    /* ACCOUNT INFO MODAL */
+    .account-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .account-modal-overlay.visible {
+      opacity: 1;
+    }
+    .account-modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 40px;
+      width: 380px;
+      max-width: 90vw;
+      position: relative;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+      transform: scale(0.92) translateY(12px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
+    }
+    .account-modal-overlay.visible .account-modal-card {
+      transform: scale(1) translateY(0);
+    }
+    .account-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f5f5f5;
+      border-radius: 50%;
+      font-size: 16px;
+      color: #666;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .account-modal-close:hover {
+      background: #eee;
+      color: #111;
+    }
+    .account-modal-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 16px;
+      border: 2px solid #f0f0f0;
+    }
+    .account-modal-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+    }
+    .account-modal-email {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .account-modal-divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin-bottom: 20px;
+    }
+    .account-modal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .account-modal-label {
+      font-size: 13px;
+      color: #999;
+      font-weight: 500;
+    }
+    .account-modal-value {
+      font-size: 13px;
+      color: #333;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -1669,15 +1764,55 @@
       if (!user) return;
       const pd = document.getElementById('profileDropdown');
       if (pd) pd.style.display = 'none';
-      alert(
-        'Account Info\n\n' +
-        'Name: ' + (user.displayName || 'N/A') + '\n' +
-        'Email: ' + (user.email || 'N/A') + '\n' +
-        'Account created: ' + 
-        (user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'N/A') + '\n' +
-        'Last sign in: ' + 
-        (user.metadata && user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString() : 'N/A')
-      );
+
+      // Remove any existing modal
+      const existing = document.getElementById('accountInfoModal');
+      if (existing) existing.remove();
+
+      const photoURL = user.photoURL || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_blue_512dp.png';
+      const displayName = user.displayName || 'N/A';
+      const email = user.email || 'N/A';
+      const createdDate = user.metadata && user.metadata.creationTime
+        ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : 'N/A';
+      const lastSignIn = user.metadata && user.metadata.lastSignInTime
+        ? new Date(user.metadata.lastSignInTime).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : 'N/A';
+
+      const overlay = document.createElement('div');
+      overlay.id = 'accountInfoModal';
+      overlay.className = 'account-modal-overlay';
+      overlay.innerHTML = `
+        <div class="account-modal-card">
+          <button class="account-modal-close" id="accountModalCloseBtn" aria-label="Close">&times;</button>
+          <img class="account-modal-avatar" src="${photoURL}" alt="Profile photo">
+          <div class="account-modal-name">${displayName}</div>
+          <div class="account-modal-email">${email}</div>
+          <div class="account-modal-divider"></div>
+          <div class="account-modal-row">
+            <span class="account-modal-label">Account created</span>
+            <span class="account-modal-value">${createdDate}</span>
+          </div>
+          <div class="account-modal-row">
+            <span class="account-modal-label">Last sign in</span>
+            <span class="account-modal-value">${lastSignIn}</span>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      // Trigger entrance animation on next frame
+      requestAnimationFrame(() => overlay.classList.add('visible'));
+
+      function closeModal() {
+        overlay.classList.remove('visible');
+        overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+      }
+
+      overlay.querySelector('#accountModalCloseBtn').addEventListener('click', closeModal);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeModal();
+      });
     }
 
     // AUTH STATE LISTENER
